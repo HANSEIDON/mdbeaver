@@ -1,0 +1,636 @@
+{
+  "created": "2026-10-29T05:08:47.359Z",
+  "encoders": [
+    "o200k",
+    "cl100k"
+  ],
+  "results": [
+    {
+      "name": "en_paper_figs.pdf",
+      "kind": "pdf",
+      "bytes": 3325580,
+      "lang": "en",
+      "ms": 1588,
+      "tokens": {
+        "plain": {
+          "o200k": 1346,
+          "cl100k": 1376
+        },
+        "raw": {
+          "o200k": 1051,
+          "cl100k": 1069
+        },
+        "mdbeaver": {
+          "o200k": 1036,
+          "cl100k": 1054
+        },
+        "mdbeaver+pages": {
+          "o200k": 1048,
+          "cl100k": 1066
+        },
+        "mineru": {
+          "o200k": 1069,
+          "cl100k": 1087
+        },
+        "mineru+opt": {
+          "o200k": 1067,
+          "cl100k": 1085
+        },
+        "mineru-img": {
+          "o200k": 478100,
+          "cl100k": 496620
+        },
+        "mineru-img+opt": {
+          "o200k": 478100,
+          "cl100k": 496620
+        },
+        "ovis": {
+          "o200k": 1247,
+          "cl100k": 1267
+        },
+        "ovis+opt": {
+          "o200k": 1233,
+          "cl100k": 1253
+        },
+        "paddle": {
+          "o200k": 1239,
+          "cl100k": 1257
+        },
+        "paddle+opt": {
+          "o200k": 1224,
+          "cl100k": 1242
+        }
+      }
+    },
+    {
+      "name": "en_paper_tables.pdf",
+      "kind": "pdf",
+      "bytes": 130583,
+      "lang": "en",
+      "ms": 141,
+      "tokens": {
+        "plain": {
+          "o200k": 3371,
+          "cl100k": 3388
+        },
+        "raw": {
+          "o200k": 2403,
+          "cl100k": 2416
+        },
+        "mdbeaver": {
+          "o200k": 2388,
+          "cl100k": 2401
+        },
+        "mdbeaver+pages": {
+          "o200k": 2400,
+          "cl100k": 2413
+        },
+        "mineru": {
+          "o200k": 2585,
+          "cl100k": 2597
+        },
+        "mineru+opt": {
+          "o200k": 2575,
+          "cl100k": 2587
+        },
+        "mineru-img": {
+          "o200k": 2585,
+          "cl100k": 2597
+        },
+        "mineru-img+opt": {
+          "o200k": 2575,
+          "cl100k": 2587
+        },
+        "ovis": {
+          "o200k": 3494,
+          "cl100k": 3499
+        },
+        "ovis+opt": {
+          "o200k": 2703,
+          "cl100k": 2731
+        },
+        "paddle": {
+          "o200k": 5440,
+          "cl100k": 5461
+        },
+        "paddle+opt": {
+          "o200k": 2490,
+          "cl100k": 2514
+        }
+      }
+    },
+    {
+      "name": "en_textbook_tcp.pdf",
+      "kind": "pdf",
+      "bytes": 157441,
+      "lang": "en",
+      "ms": 645,
+      "tokens": {
+        "plain": {
+          "o200k": 1502,
+          "cl100k": 1517
+        },
+        "raw": {
+          "o200k": 1315,
+          "cl100k": 1331
+        },
+        "mdbeaver": {
+          "o200k": 1300,
+          "cl100k": 1316
+        },
+        "mdbeaver+pages": {
+          "o200k": 1312,
+          "cl100k": 1328
+        },
+        "mineru": {
+          "o200k": 1268,
+          "cl100k": 1281
+        },
+        "mineru+opt": {
+          "o200k": 1268,
+          "cl100k": 1281
+        },
+        "mineru-img": {
+          "o200k": 88880,
+          "cl100k": 92548
+        },
+        "mineru-img+opt": {
+          "o200k": 88880,
+          "cl100k": 92548
+        },
+        "ovis": {
+          "o200k": 1301,
+          "cl100k": 1315
+        },
+        "ovis+opt": {
+          "o200k": 1287,
+          "cl100k": 1301
+        },
+        "paddle": {
+          "o200k": 1341,
+          "cl100k": 1355
+        },
+        "paddle+opt": {
+          "o200k": 1326,
+          "cl100k": 1340
+        }
+      }
+    },
+    {
+      "name": "ko_notes_scan.pdf",
+      "kind": "pdf",
+      "bytes": 575660,
+      "lang": "en",
+      "ms": 73,
+      "tokens": {
+        "plain": {
+          "o200k": 1,
+          "cl100k": 1
+        },
+        "raw": {
+          "o200k": 51,
+          "cl100k": 51
+        },
+        "mdbeaver": {
+          "o200k": 9,
+          "cl100k": 9
+        },
+        "mdbeaver+pages": {
+          "o200k": 21,
+          "cl100k": 21
+        },
+        "mineru": {
+          "o200k": 1870,
+          "cl100k": 2627
+        },
+        "mineru+opt": {
+          "o200k": 1870,
+          "cl100k": 2627
+        },
+        "mineru-img": {
+          "o200k": 1870,
+          "cl100k": 2627
+        },
+        "mineru-img+opt": {
+          "o200k": 1870,
+          "cl100k": 2627
+        },
+        "ovis": {
+          "o200k": 1830,
+          "cl100k": 2590
+        },
+        "ovis+opt": {
+          "o200k": 1815,
+          "cl100k": 2575
+        },
+        "paddle": {
+          "o200k": 1847,
+          "cl100k": 2584
+        },
+        "paddle+opt": {
+          "o200k": 1832,
+          "cl100k": 2569
+        }
+      }
+    },
+    {
+      "name": "ko_notes_text.pdf",
+      "kind": "pdf",
+      "bytes": 4252404,
+      "lang": "ko",
+      "ms": 280,
+      "tokens": {
+        "plain": {
+          "o200k": 2587,
+          "cl100k": 3439
+        },
+        "raw": {
+          "o200k": 1952,
+          "cl100k": 2748
+        },
+        "mdbeaver": {
+          "o200k": 1937,
+          "cl100k": 2733
+        },
+        "mdbeaver+pages": {
+          "o200k": 1949,
+          "cl100k": 2745
+        },
+        "mineru": {
+          "o200k": 1945,
+          "cl100k": 2745
+        },
+        "mineru+opt": {
+          "o200k": 1945,
+          "cl100k": 2740
+        },
+        "mineru-img": {
+          "o200k": 1945,
+          "cl100k": 2745
+        },
+        "mineru-img+opt": {
+          "o200k": 1945,
+          "cl100k": 2740
+        },
+        "ovis": {
+          "o200k": 1829,
+          "cl100k": 2591
+        },
+        "ovis+opt": {
+          "o200k": 1814,
+          "cl100k": 2576
+        },
+        "paddle": {
+          "o200k": 1838,
+          "cl100k": 2578
+        },
+        "paddle+opt": {
+          "o200k": 1823,
+          "cl100k": 2563
+        }
+      }
+    },
+    {
+      "name": "zh_book_text.pdf",
+      "kind": "pdf",
+      "bytes": 186755,
+      "lang": "zh",
+      "ms": 198,
+      "tokens": {
+        "plain": {
+          "o200k": 1794,
+          "cl100k": 2254
+        },
+        "raw": {
+          "o200k": 1549,
+          "cl100k": 2024
+        },
+        "mdbeaver": {
+          "o200k": 1539,
+          "cl100k": 2014
+        },
+        "mdbeaver+pages": {
+          "o200k": 1547,
+          "cl100k": 2022
+        },
+        "mineru": {
+          "o200k": 1918,
+          "cl100k": 2359
+        },
+        "mineru+opt": {
+          "o200k": 1894,
+          "cl100k": 2335
+        },
+        "mineru-img": {
+          "o200k": 1918,
+          "cl100k": 2359
+        },
+        "mineru-img+opt": {
+          "o200k": 1894,
+          "cl100k": 2335
+        },
+        "ovis": {
+          "o200k": 1764,
+          "cl100k": 2220
+        },
+        "ovis+opt": {
+          "o200k": 1721,
+          "cl100k": 2177
+        },
+        "paddle": {
+          "o200k": 1707,
+          "cl100k": 2160
+        },
+        "paddle+opt": {
+          "o200k": 1669,
+          "cl100k": 2122
+        }
+      }
+    },
+    {
+      "name": "zh_db_scan.pdf",
+      "kind": "pdf",
+      "bytes": 489955,
+      "lang": "en",
+      "ms": 539,
+      "tokens": {
+        "plain": {
+          "o200k": 1,
+          "cl100k": 1
+        },
+        "raw": {
+          "o200k": 51,
+          "cl100k": 51
+        },
+        "mdbeaver": {
+          "o200k": 9,
+          "cl100k": 9
+        },
+        "mdbeaver+pages": {
+          "o200k": 21,
+          "cl100k": 21
+        },
+        "mineru": {
+          "o200k": 1618,
+          "cl100k": 2217
+        },
+        "mineru+opt": {
+          "o200k": 1618,
+          "cl100k": 2217
+        },
+        "mineru-img": {
+          "o200k": 118287,
+          "cl100k": 123975
+        },
+        "mineru-img+opt": {
+          "o200k": 118287,
+          "cl100k": 123975
+        },
+        "ovis": {
+          "o200k": 1834,
+          "cl100k": 2438
+        },
+        "ovis+opt": {
+          "o200k": 1634,
+          "cl100k": 2238
+        },
+        "paddle": {
+          "o200k": 2394,
+          "cl100k": 2981
+        },
+        "paddle+opt": {
+          "o200k": 1660,
+          "cl100k": 2247
+        }
+      }
+    },
+    {
+      "name": "zh_exam_formulas.pdf",
+      "kind": "pdf",
+      "bytes": 355129,
+      "lang": "zh",
+      "ms": 69,
+      "tokens": {
+        "plain": {
+          "o200k": 295,
+          "cl100k": 361
+        },
+        "raw": {
+          "o200k": 244,
+          "cl100k": 313
+        },
+        "mdbeaver": {
+          "o200k": 234,
+          "cl100k": 303
+        },
+        "mdbeaver+pages": {
+          "o200k": 242,
+          "cl100k": 311
+        },
+        "mineru": {
+          "o200k": 1070,
+          "cl100k": 1138
+        },
+        "mineru+opt": {
+          "o200k": 1065,
+          "cl100k": 1133
+        },
+        "mineru-img": {
+          "o200k": 1070,
+          "cl100k": 1138
+        },
+        "mineru-img+opt": {
+          "o200k": 1065,
+          "cl100k": 1133
+        },
+        "ovis": {
+          "o200k": 893,
+          "cl100k": 964
+        },
+        "ovis+opt": {
+          "o200k": 878,
+          "cl100k": 949
+        },
+        "paddle": {
+          "o200k": 872,
+          "cl100k": 944
+        },
+        "paddle+opt": {
+          "o200k": 848,
+          "cl100k": 920
+        }
+      }
+    },
+    {
+      "name": "zh_handwritten.pdf",
+      "kind": "pdf",
+      "bytes": 6666426,
+      "lang": "zh",
+      "ms": 904,
+      "tokens": {
+        "plain": {
+          "o200k": 13,
+          "cl100k": 15
+        },
+        "raw": {
+          "o200k": 33,
+          "cl100k": 34
+        },
+        "mdbeaver": {
+          "o200k": 20,
+          "cl100k": 21
+        },
+        "mdbeaver+pages": {
+          "o200k": 28,
+          "cl100k": 29
+        },
+        "mineru": {
+          "o200k": 3984,
+          "cl100k": 4236
+        },
+        "mineru+opt": {
+          "o200k": 3922,
+          "cl100k": 4174
+        },
+        "mineru-img": {
+          "o200k": 3984,
+          "cl100k": 4236
+        },
+        "mineru-img+opt": {
+          "o200k": 3922,
+          "cl100k": 4174
+        },
+        "ovis": {
+          "o200k": 4210,
+          "cl100k": 4484
+        },
+        "ovis+opt": {
+          "o200k": 4093,
+          "cl100k": 4367
+        },
+        "paddle": {
+          "o200k": 4182,
+          "cl100k": 4426
+        },
+        "paddle+opt": {
+          "o200k": 4018,
+          "cl100k": 4258
+        }
+      }
+    },
+    {
+      "name": "zh_math_scan.pdf",
+      "kind": "pdf",
+      "bytes": 831552,
+      "lang": "en",
+      "ms": 82,
+      "tokens": {
+        "plain": {
+          "o200k": 1,
+          "cl100k": 1
+        },
+        "raw": {
+          "o200k": 51,
+          "cl100k": 51
+        },
+        "mdbeaver": {
+          "o200k": 9,
+          "cl100k": 9
+        },
+        "mdbeaver+pages": {
+          "o200k": 21,
+          "cl100k": 21
+        },
+        "mineru": {
+          "o200k": 2859,
+          "cl100k": 3082
+        },
+        "mineru+opt": {
+          "o200k": 2827,
+          "cl100k": 3050
+        },
+        "mineru-img": {
+          "o200k": 2859,
+          "cl100k": 3082
+        },
+        "mineru-img+opt": {
+          "o200k": 2827,
+          "cl100k": 3050
+        },
+        "ovis": {
+          "o200k": 2908,
+          "cl100k": 3060
+        },
+        "ovis+opt": {
+          "o200k": 2871,
+          "cl100k": 3023
+        },
+        "paddle": {
+          "o200k": 2600,
+          "cl100k": 2827
+        },
+        "paddle+opt": {
+          "o200k": 2568,
+          "cl100k": 2795
+        }
+      }
+    },
+    {
+      "name": "zh_slides.pdf",
+      "kind": "pdf",
+      "bytes": 2426498,
+      "lang": "zh",
+      "ms": 303,
+      "tokens": {
+        "plain": {
+          "o200k": 874,
+          "cl100k": 1106
+        },
+        "raw": {
+          "o200k": 785,
+          "cl100k": 1004
+        },
+        "mdbeaver": {
+          "o200k": 765,
+          "cl100k": 984
+        },
+        "mdbeaver+pages": {
+          "o200k": 781,
+          "cl100k": 1000
+        },
+        "mineru": {
+          "o200k": 915,
+          "cl100k": 1107
+        },
+        "mineru+opt": {
+          "o200k": 916,
+          "cl100k": 1108
+        },
+        "mineru-img": {
+          "o200k": 45677,
+          "cl100k": 47515
+        },
+        "mineru-img+opt": {
+          "o200k": 45678,
+          "cl100k": 47516
+        },
+        "ovis": {
+          "o200k": 838,
+          "cl100k": 1032
+        },
+        "ovis+opt": {
+          "o200k": 819,
+          "cl100k": 1012
+        },
+        "paddle": {
+          "o200k": 867,
+          "cl100k": 1059
+        },
+        "paddle+opt": {
+          "o200k": 848,
+          "cl100k": 1039
+        }
+      }
+    }
+  ]
+}

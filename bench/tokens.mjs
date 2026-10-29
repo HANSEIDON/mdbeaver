@@ -54,12 +54,16 @@ async function plainText(kind, bytes) {
   return texts.join("\n\n");
 }
 
+// Each external output is counted as-is and after the site's optimizer (`<tool>+opt`), since GPU
+// engine output reaches users through web/js/output.js just like the browser converters' output.
 async function externalBaselines(fileName) {
   if (!existsSync(BASELINES)) return {};
   const out = {};
   for (const tool of await readdir(BASELINES)) {
     const path = join(BASELINES, tool, `${fileName}.md`);
-    if (existsSync(path)) out[tool] = await readFile(path, "utf8");
+    if (!existsSync(path)) continue;
+    out[tool] = await readFile(path, "utf8");
+    out[`${tool}+opt`] = optimize(out[tool]);
   }
   return out;
 }
@@ -111,6 +115,16 @@ async function main() {
   const sum = (key, enc) => ok.reduce((s, r) => s + (r.tokens[key]?.[enc] ?? 0), 0);
   for (const enc of Object.keys(ENCODERS)) {
     console.log(`${enc}: plain ${sum("plain", enc)} → mdbeaver ${sum("mdbeaver", enc)} (${pct(sum("mdbeaver", enc), sum("plain", enc))} vs plain, ${pct(sum("mdbeaver", enc), sum("raw", enc))} vs raw)`);
+  }
+
+  const builtIn = ["plain", "raw", "mdbeaver", "mdbeaver+pages"];
+  const tools = [...new Set(ok.flatMap((r) => Object.keys(r.tokens)))].filter((k) => !builtIn.includes(k)).sort();
+  if (tools.length) {
+    // Totals only over documents every external tool covered, so the columns are comparable.
+    const covered = ok.filter((r) => tools.every((t) => r.tokens[t]));
+    const total = (key) => covered.reduce((s, r) => s + r.tokens[key].o200k, 0);
+    console.log(`\nExternal outputs (o200k, ${covered.length} documents covered by every tool)`);
+    console.table(["plain", "mdbeaver", ...tools].map((k) => ({ variant: k, tokens: total(k), "vs plain": pct(total(k), total("plain")) })));
   }
 
   await mkdir(join(ROOT, "results"), { recursive: true });
