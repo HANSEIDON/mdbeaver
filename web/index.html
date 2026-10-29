@@ -99,8 +99,8 @@
       <div id="tab-results" class="tab-body results" hidden>
         <div id="empty" class="empty">
           <picture class="empty-beaver"><source srcset="/beaver-gnaw-still.png" media="(prefers-reduced-motion: reduce)"><img src="/beaver-gnaw.webp" alt="" width="178" height="112"></picture>
-          <p>Nothing here yet.</p>
-          <small>Add files and press Convert.</small>
+          <p id="empty-title">Nothing here yet.</p>
+          <small id="empty-text">Add files and press Convert.</small>
         </div>
         <div id="notice" class="notice" role="status" hidden>
           <p class="notice-title">Some pages weren't read properly</p>
@@ -124,8 +124,8 @@
       </div>
 
       <div id="working" class="working" hidden>
-        <picture class="mini-beaver"><source srcset="/beaver-gnaw-still.png" media="(prefers-reduced-motion: reduce)"><img src="/beaver-gnaw.webp" alt="" width="89" height="56"></picture>
-        <span id="working-text" class="working-text"></span>
+        <div class="working-line"><span id="working-text" class="working-text"></span><span id="working-count" class="working-count"></span></div>
+        <div class="runbar" aria-hidden="true"><i id="working-bar"></i></div>
       </div>
 
       <div class="dock">

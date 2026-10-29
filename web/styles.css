@@ -180,12 +180,20 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .editor-foot { display: flex; justify-content: space-between; gap: 12px; padding: 5px 14px; background: var(--chrome); border-top: 1px solid var(--line); font: 11.5px var(--mono); color: var(--ink-3); }
 
 /* small working beaver, bottom of the panel */
-.working { display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+.working { padding: 10px 24px 12px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
+.working-line { display: flex; justify-content: space-between; gap: 12px; }
+.working-count { flex: none; font: 12px var(--mono); color: var(--ink-3); }
+/* progress lines: the whole run at the bottom, each file under its name */
+.runbar, .pbar { display: block; overflow: hidden; border-radius: 2px; background: var(--line-soft); }
+.runbar { height: 3px; margin-top: 8px; }
+.pbar { height: 2px; margin-top: 6px; }
+.runbar i, .pbar i { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--accent); transition: width 0.3s ease; }
+.runbar i.indeterminate, .pbar i.indeterminate { width: 35%; animation: slide 1.2s ease-in-out infinite; }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+@media (prefers-reduced-motion: reduce) { .runbar i.indeterminate, .pbar i.indeterminate { width: 100%; opacity: 0.5; animation: none; } }
 /* pixel beaver: drawn on an 89x56 grid, scaled up with hard pixel edges */
-.mini-beaver, .empty-beaver { display: block; flex: none; }
-.mini-beaver img, .empty-beaver img { display: block; height: auto; image-rendering: pixelated; }
-.mini-beaver img { width: 89px; margin: -10px 0 -8px; }
-.empty-beaver img { width: 178px; margin: 0 auto 18px; }
+.empty-beaver { display: block; }
+.empty-beaver img { display: block; width: 178px; height: auto; margin: 0 auto 18px; image-rendering: pixelated; }
 .working-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* dock */

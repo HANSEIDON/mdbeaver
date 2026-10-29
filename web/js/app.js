@@ -91,8 +91,17 @@ function renderFiles() {
       jump.addEventListener("click", () => jumpTo(item.file.name));
       nameCell.append(jump);
     } else nameCell.textContent = item.file.name;
-    tr.append(nameCell, cell("num", formatSize(item.file.size)),
-      cell(`num st ${item.status || ""}`, (item.status === "warn" ? "⚠ " : "") + (item.info || "ready")), removeCell);
+    const statusCell = cell(`num st ${item.status || ""}`, (item.status === "warn" ? "⚠ " : "") + (item.info || "ready"));
+    item.bar = item.statusCell = null;
+    if (item.status === "busy") {
+      // A thin line under the name; progress() moves it and the status text without a re-render.
+      const pbar = Object.assign(document.createElement("span"), { className: "pbar" });
+      item.bar = pbar.appendChild(document.createElement("i"));
+      setBar(item.bar, item.progress ?? 0);
+      nameCell.append(pbar);
+      item.statusCell = statusCell;
+    }
+    tr.append(nameCell, cell("num", formatSize(item.file.size)), statusCell, removeCell);
     return tr;
   }));
   $("files").parentElement.classList.toggle("has-rows", state.items.length > 0);
@@ -124,10 +133,23 @@ drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); });
 $("file").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
 
-// --- progress: one line next to the small beaver (the file list shows per-file status) ---
-function progress(text) {
+// --- progress: the bottom line follows the whole run, each file row has its own line ---
+// f is 0..1, or null while the GPU works (it reports no page count): the line then slides.
+function setBar(el, f) {
+  el.classList.toggle("indeterminate", f === null);
+  el.style.width = f === null ? "" : `${Math.round(f * 100)}%`;
+}
+
+function progress(text, item, f, short) {
   $("working").hidden = false;
   $("working-text").textContent = text;
+  if (!item) return;
+  item.progress = f;
+  const i = state.items.indexOf(item), n = state.items.length;
+  $("working-count").textContent = n > 1 ? `${i + 1} of ${n}` : "";
+  setBar($("working-bar"), f === null ? null : (i + f) / n);
+  if (item.bar) setBar(item.bar, f);
+  if (item.statusCell) item.statusCell.textContent = short ?? (f === null ? "on the GPU" : `${Math.round(f * 100)}%`);
 }
 
 // --- conversion paths --------------------------------------------------
@@ -144,7 +166,7 @@ async function convertLocal(item, label, signal) {
   const convert = await CONVERTERS[item.kind]();
   return convert(item.file, (f) => {
     if (signal?.aborted) throw stopped();
-    progress(`Gnawing ${label} · ${Math.round(f * 100)}%`);
+    progress(`Reading ${label} in your browser`, item, f);
   });
 }
 
@@ -154,7 +176,7 @@ const sleep = (ms, signal) => new Promise((resolve, reject) => {
 });
 
 async function convertServer(item, label, mode, pages, signal) {
-  progress(`Sending ${label} to the GPU`);
+  progress(`Sending ${label} to the GPU`, item, null, "sending");
   const form = new FormData();
   form.append("file", item.file);
   form.append("mode", mode);
@@ -171,8 +193,8 @@ async function convertServer(item, label, mode, pages, signal) {
   for (;;) {
     await sleep(1500, signal);
     const s = await (await fetch(`/api/jobs/${id}`, { cache: "no-store", signal })).json();
-    if (s.status === "queued") progress(`${label} · in line, #${s.position}`);
-    else if (s.status === "running") progress(`Gnawing ${label} on the GPU`);
+    if (s.status === "queued") progress(`${label} · in line for the GPU, #${s.position}`, item, null, `in line #${s.position}`);
+    else if (s.status === "running") progress(`Reading ${label} on the GPU`, item, null);
     else if (s.status === "done") {
       fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {});
       return s.markdown;
@@ -289,6 +311,8 @@ function renderNotice(warnings) {
   }));
 }
 
+const SCANNED_NOTE = /\[scanned page: no text layer\]/g;
+
 async function run() {
   if (!state.items.length || state.busy) return;
   state.busy = true;
@@ -300,8 +324,13 @@ async function run() {
   let halted = false;
   const warnings = [];
   renderNotice([]);
-  for (const item of state.items) { item.status = ""; item.info = "waiting"; }
+  for (const item of state.items) { item.status = ""; item.info = "waiting"; item.progress = 0; }
   renderFiles();
+  // The beaver keeps the Results tab company until the first Markdown arrives.
+  $("result").hidden = true;
+  $("empty").hidden = false;
+  $("empty-title").textContent = "Gnawing…";
+  $("empty-text").textContent = "The Markdown shows up here as soon as the first file is done.";
   showTab("results");
 
   const showResults = () => {
@@ -321,7 +350,8 @@ async function run() {
       result.raw = draft;
       if (!state.results.includes(result)) state.results.push(result);
       item.info = "draft ready · GPU working"; renderFiles();
-      showResults();
+      // A draft of only scanned pages has no text yet: the beaver stays until there is some.
+      if (state.results.some((r) => optimize(r.raw).replace(SCANNED_NOTE, "").trim())) showResults();
     };
     try {
       const { markdown, gpu, empty, layout } = await convert(item, label, onDraft, controller.signal);
@@ -330,6 +360,7 @@ async function run() {
       const tokens = estimateTokens(optimize(markdown));
       item.status = gpu in WHY ? "warn" : "done"; item.info = `done · ${tokens.toLocaleString()} tokens`;
       if (gpu in WHY) { warnings.push({ name: item.file.name, gpu, empty, layout }); renderNotice(warnings); }
+      showResults();
     } catch (e) {
       if (e.name === "AbortError") {
         halted = true;
@@ -352,6 +383,10 @@ async function run() {
   $("working").hidden = true;
   renderFiles();
   if (state.results.length) showResults();
+  else {
+    $("empty-title").textContent = "Nothing here yet.";
+    $("empty-text").textContent = "Add files and press Convert.";
+  }
   const notes = [];
   if (halted) notes.push("Stopped. Files already converted are kept.");
   if (failed) notes.push(`${count(failed, "file")} couldn't be converted.`);
