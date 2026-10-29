@@ -1,5 +1,5 @@
 // About page: each time the token chart scrolls well into view the beaver pops up over its top
-// edge and chomps: the card shakes, bite marks and cracks appear, crumbs fly and the mdbeaver
+// edge and takes three bites: the card shakes, crumbs fly and the mdbeaver
 // bars get gnawed down from the page-image length to their real length. Scrolling away and back
 // plays it again. Without JS, or with reduced motion, the chart simply shows its final state.
 const chart = document.querySelector(".chart");
