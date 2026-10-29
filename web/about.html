@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About — mdbeaver</title>
+  <meta name="description" content="How mdbeaver turns documents into Markdown, how many tokens it saves, and what happens to your files.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/" aria-label="mdbeaver home">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="15" class="logo-face"/>
+        <circle cx="7" cy="7" r="3.2" class="logo-face"/><circle cx="25" cy="7" r="3.2" class="logo-face"/>
+        <circle cx="11" cy="13" r="2" class="logo-eye"/><circle cx="21" cy="13" r="2" class="logo-eye"/>
+        <ellipse cx="16" cy="18" rx="4.5" ry="3" class="logo-nose"/>
+        <rect x="13.2" y="20.5" width="2.6" height="5" rx="0.7" class="logo-tooth"/>
+        <rect x="16.2" y="20.5" width="2.6" height="5" rx="0.7" class="logo-tooth"/>
+      </svg>
+      <span class="wordmark">mdbeaver</span>
+    </a>
+    <nav class="nav">
+      <a href="/">Convert</a>
+      <a href="https://github.com/HANSEIDON/mdbeaver" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main class="about">
+    <section class="about-hero">
+      <p class="label">About</p>
+      <h1>Hi. I'm the beaver.</h1>
+      <p class="lead">I chew PDFs, Word files and slides into Markdown an AI can actually digest. I keep the headings, tables and formulas, and spit out the page numbers, running headers and other wood chips — so the same document costs fewer tokens.</p>
+      <p class="lead">It's free. I work for sticks.</p>
+    </section>
+
+    <section>
+      <h2>How I work</h2>
+      <ol class="logs">
+        <li><span class="log-n">1</span><div><strong>Your browser takes the first bite.</strong> Text PDFs, Word and PowerPoint are converted on your device and never leave it.</div></li>
+        <li><span class="log-n">2</span><div><strong>The tough bits go to my GPU.</strong> Scanned pages, two-column layouts and big tables are read on a GPU. Pick Best quality and every page goes there.</div></li>
+        <li><span class="log-n">3</span><div><strong>Nothing gets stashed in the dam.</strong> Uploads are deleted right after conversion. Pick Device only and nothing is uploaded at all.</div></li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Fewer tokens, nearly the same answers</h2>
+      <p class="stat"><span class="stat-big">−46%</span><span class="stat-text">tokens compared with handing the AI your pages as images, at 94% vs 98% correct answers.</span></p>
+
+      <figure class="chart" aria-labelledby="chart-title">
+        <figcaption id="chart-title" class="chart-title">Tokens the AI reads per question <span>(fewer is better)</span></figcaption>
+        <div class="bars" role="list">
+          <div class="bar-row" role="listitem" title="Page images: 3,848 tokens per question, 98% correct">
+            <span class="bar-label">Page images<small>like attaching the PDF</small></span>
+            <span class="bar-track"><span class="bar" style="--w: 100%"></span></span>
+            <span class="bar-value">3,848<small>98% correct</small></span>
+          </div>
+          <div class="bar-row is-ours" role="listitem" title="mdbeaver, Best quality: 2,071 tokens per question, 94% correct">
+            <span class="bar-label">mdbeaver<small>Best quality</small></span>
+            <span class="bar-track"><span class="bar" style="--w: 53.8%"></span></span>
+            <span class="bar-value">2,071<small>94% correct</small></span>
+          </div>
+          <div class="bar-row is-ours" role="listitem" title="mdbeaver, Standard: 1,698 tokens per question, 81% correct">
+            <span class="bar-label">mdbeaver<small>Standard</small></span>
+            <span class="bar-track"><span class="bar" style="--w: 44.1%"></span></span>
+            <span class="bar-value">1,698<small>81% correct</small></span>
+          </div>
+          <div class="bar-row" role="listitem" title="Copy-pasted text: 1,279 tokens per question, 52% correct">
+            <span class="bar-label">Copy-pasted text<small>no structure</small></span>
+            <span class="bar-track"><span class="bar" style="--w: 33.2%"></span></span>
+            <span class="bar-value">1,279<small>52% correct</small></span>
+          </div>
+        </div>
+        <details class="chart-table">
+          <summary>Show as a table</summary>
+          <table>
+            <thead><tr><th scope="col">What the AI was given</th><th scope="col">Tokens per question</th><th scope="col">Correct</th></tr></thead>
+            <tbody>
+              <tr><td>Page images</td><td>3,848</td><td>98%</td></tr>
+              <tr><td>mdbeaver, Best quality</td><td>2,071</td><td>94%</td></tr>
+              <tr><td>mdbeaver, Standard</td><td>1,698</td><td>81%</td></tr>
+              <tr><td>Copy-pasted text</td><td>1,279</td><td>52%</td></tr>
+            </tbody>
+          </table>
+        </details>
+      </figure>
+      <p class="fine">83 questions about 11 documents (31 pages of Korean, Chinese and English: text, scans, handwriting, slides), answered by a local 27B model that saw only one version of each document. Both mdbeaver rows keep page numbers. Most of the gap to page images comes from questions about what is drawn inside figures. It's a small test; the scripts are on <a href="https://github.com/HANSEIDON/mdbeaver" target="_blank" rel="noopener">GitHub</a>.</p>
+    </section>
+
+    <section>
+      <h2>What happens to your files</h2>
+      <ul class="facts">
+        <li>No accounts, no cookies, no analytics.</li>
+        <li>Uploaded files are deleted as soon as they are converted; results are gone within 10 minutes.</li>
+        <li>Pages sent to the GPU travel over HTTPS through a server in Japan and are read on a computer in China.</li>
+        <li>The web server keeps standard access logs (IP address, time, page) for 14 days.</li>
+      </ul>
+      <p class="fine">A full privacy policy and terms of use are on the way.</p>
+    </section>
+
+    <section>
+      <h2>Credits</h2>
+      <p>Server-side PDF conversion uses <a href="https://github.com/opendatalab/MinerU" target="_blank" rel="noopener">MinerU</a>. In-browser conversion uses <a href="https://mozilla.github.io/pdf.js/" target="_blank" rel="noopener">pdf.js</a> and <a href="https://stuk.github.io/jszip/" target="_blank" rel="noopener">JSZip</a>. Set in IBM Plex.</p>
+    </section>
+
+    <section class="feed">
+      <img src="/donate-wechat.jpg" width="160" height="160" alt="WeChat donation QR code">
+      <div>
+        <h2>Feed the beaver</h2>
+        <p>I run on one home GPU and a lot of sticks. If I saved you time, a coffee through WeChat keeps me chewing.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

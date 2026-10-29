@@ -1,7 +1,14 @@
 import { estimateTokens, merge, optimize } from "./output.js";
 
 const $ = (id) => document.getElementById(id);
-const KINDS = { pdf: "PDF", docx: "DOCX", pptx: "PPTX" };
+// "standard": browser first, GPU only for pages it can't read; "best": every PDF page on the GPU;
+// "device": nothing is uploaded.
+const mode = () => document.querySelector('input[name="mode"]:checked').value;
+const MODE_HELP = {
+  standard: "Converts in your browser. Only scanned or multi-column pages go to the GPU.",
+  best: "Every PDF page goes through the GPU: better tables, formulas and reading order. Slower; up to 50 pages.",
+  device: "Nothing leaves your device. Scanned pages come out empty.",
+};
 // doneFor: the inputs of the last complete run; Convert stays off until files or options change,
 // so a stray click does not convert (and upload) everything again. abort: the running run's stop.
 const state = { items: [], workerOnline: false, maxMb: 50, busy: false, results: [], doneFor: null, abort: null };
@@ -16,21 +23,21 @@ async function refreshStatus() {
     state.workerOnline = false;
   }
   $("status").dataset.state = state.workerOnline ? "online" : "offline";
-  $("status-text").textContent = state.workerOnline ? "GPU beaver online" : "GPU beaver resting";
+  $("status-text").textContent = state.workerOnline ? "GPU ONLINE" : "GPU RESTING";
   renderRoute();
 }
 
 // Every file converts in the browser first. A PDF goes to the GPU only for pages the browser could
 // not read (scans), or for every page with "Best quality". Matches worker MDB_MAX_GPU_PAGES.
 const GPU_MAX_PAGES = 50;
-const canUseGpu = (item) => item.kind === "pdf" && state.workerOnline && !$("local-only").checked && item.file.size <= state.maxMb * 1048576;
+const canUseGpu = (item) => item.kind === "pdf" && state.workerOnline && mode() !== "device" && item.file.size <= state.maxMb * 1048576;
 
 function renderRoute() {
   if (state.busy) return;
-  if (!state.items.length) { $("route").textContent = "Free · add documents to start"; return; }
+  if (!state.items.length) { $("route").textContent = "Free · add files to start"; return; }
   const gpu = state.items.some(canUseGpu);
-  const where = !gpu ? "runs in your browser" : $("best").checked ? "PDFs on our GPU server, the rest in your browser" : "in your browser · scanned pages on our GPU";
-  $("route").textContent = `Free · ${state.items.length} file${state.items.length > 1 ? "s" : ""} · ${where}`;
+  const where = !gpu ? "in your browser" : mode() === "best" ? "PDFs on the GPU" : "browser first, GPU when needed";
+  $("route").textContent = `${state.items.length} file${state.items.length > 1 ? "s" : ""} · ${where}`;
 }
 
 // --- tabs and options ---------------------------------------------------
@@ -41,8 +48,7 @@ function showTab(name) {
 }
 document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
 // What a run depends on; "Keep page numbers" only re-renders the output, so it is not part of it.
-const inputsKey = () => JSON.stringify([state.items.map((it) => [it.file.name, it.file.size, it.file.lastModified]),
-  $("best").checked, $("local-only").checked]);
+const inputsKey = () => JSON.stringify([state.items.map((it) => [it.file.name, it.file.size, it.file.lastModified]), mode()]);
 
 function renderRun() {
   const done = !state.busy && state.items.length > 0 && state.doneFor === inputsKey();
@@ -52,7 +58,9 @@ function renderRun() {
   if (!state.busy) $("stop").disabled = false;
 }
 
-for (const id of ["local-only", "best"]) $(id).addEventListener("change", () => { renderRoute(); renderRun(); });
+const renderMode = () => { $("mode-help").textContent = MODE_HELP[mode()]; };
+for (const r of document.querySelectorAll('input[name="mode"]')) r.addEventListener("change", () => { renderMode(); renderRoute(); renderRun(); });
+renderMode();
 $("keep-pages").addEventListener("change", () => { if (state.results.length) renderOutput(); });
 
 // --- file list ---------------------------------------------------------
@@ -66,22 +74,20 @@ function setMessage(text, isError = false) {
 }
 
 function renderFiles() {
-  const list = $("files");
-  list.replaceChildren(...state.items.map((item, i) => {
-    const li = document.createElement("li");
-    const type = Object.assign(document.createElement("span"), { className: "ftype", textContent: KINDS[item.kind] });
-    const meta = Object.assign(document.createElement("div"), { className: "fmeta" });
-    meta.append(
-      Object.assign(document.createElement("p"), { className: "fname", textContent: item.file.name }),
-      Object.assign(document.createElement("p"), { className: `finfo ${item.status || ""}`, textContent: item.info || formatSize(item.file.size) }),
-    );
+  const cell = (className, text) => Object.assign(document.createElement("td"), { className, textContent: text });
+  $("files").replaceChildren(...state.items.map((item, i) => {
+    const tr = document.createElement("tr");
     const remove = Object.assign(document.createElement("button"), { className: "icon-btn", textContent: "×", disabled: state.busy });
     remove.setAttribute("aria-label", `Remove ${item.file.name}`);
     remove.addEventListener("click", () => { state.items.splice(i, 1); renderFiles(); });
-    li.append(type, meta, remove);
-    return li;
+    const removeCell = cell("num", "");
+    removeCell.append(remove);
+    tr.append(cell("name", item.file.name), cell("num", formatSize(item.file.size)),
+      cell(`num st ${item.status || ""}`, item.info || "ready"), removeCell);
+    return tr;
   }));
-  list.hidden = !state.items.length;
+  $("files").parentElement.classList.toggle("has-rows", state.items.length > 0);
+  $("no-files").hidden = state.items.length > 0;
   $("drop").classList.toggle("compact", state.items.length > 0);
   renderRun();
   renderRoute();
@@ -108,13 +114,10 @@ drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); });
 $("file").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
 
-// --- progress ----------------------------------------------------------
-function progress(text, fraction = null) {
-  $("route").textContent = text;
-  $("bar").hidden = false;
-  const fill = $("bar-fill");
-  fill.classList.toggle("indeterminate", fraction === null);
-  fill.style.width = fraction === null ? "" : `${Math.round(fraction * 100)}%`;
+// --- progress: one line next to the small beaver (the file list shows per-file status) ---
+function progress(text) {
+  $("working").hidden = false;
+  $("working-text").textContent = text;
 }
 
 // --- conversion paths --------------------------------------------------
@@ -131,7 +134,7 @@ async function convertLocal(item, label, signal) {
   const convert = await CONVERTERS[item.kind]();
   return convert(item.file, (f) => {
     if (signal?.aborted) throw stopped();
-    progress(`${label} · chewing in your browser`, f);
+    progress(`Gnawing ${label} · ${Math.round(f * 100)}%`);
   });
 }
 
@@ -141,7 +144,7 @@ const sleep = (ms, signal) => new Promise((resolve, reject) => {
 });
 
 async function convertServer(item, label, mode, pages, signal) {
-  progress(`${label} · uploading`);
+  progress(`Sending ${label} to the GPU`);
   const form = new FormData();
   form.append("file", item.file);
   form.append("mode", mode);
@@ -158,8 +161,8 @@ async function convertServer(item, label, mode, pages, signal) {
   for (;;) {
     await sleep(1500, signal);
     const s = await (await fetch(`/api/jobs/${id}`, { cache: "no-store", signal })).json();
-    if (s.status === "queued") progress(`${label} · in line #${s.position}`);
-    else if (s.status === "running") progress(`${label} · the GPU beaver is chewing`);
+    if (s.status === "queued") progress(`${label} · in line, #${s.position}`);
+    else if (s.status === "running") progress(`Gnawing ${label} on the GPU`);
     else if (s.status === "done") {
       fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {});
       return s.markdown;
@@ -199,7 +202,7 @@ async function convert(item, label, onDraft, signal) {
   // Pages the browser could not read (scans) or could only guess the layout of (columns).
   const scanned = all.filter((n) => pages.get(n).endsWith(SCANNED_PAGE) || pages.get(n).endsWith(NEEDS_GPU));
   // Best quality redoes every page, unless that is over the GPU limit: then only the scans.
-  const best = $("best").checked && all.length <= GPU_MAX_PAGES;
+  const best = mode() === "best" && all.length <= GPU_MAX_PAGES;
   const target = best ? all : scanned;
   const missed = (why) => ({ markdown: local, gpu: scanned.length ? why : "unneeded" });
   if (!target.length) return { markdown: local, gpu: "unneeded" };
@@ -228,7 +231,8 @@ function renderOutput() {
   const md = merge(outs);
   $("output").value = md;
   $("result-name").textContent = outs.length === 1 ? mdName(outs[0].name) : `merged-${outs.length}-documents.md`;
-  $("result-stats").textContent = `${outs.length} file${outs.length > 1 ? "s" : ""} · ${md.length.toLocaleString()} chars · ~${estimateTokens(md).toLocaleString()} tokens`;
+  const files = outs.length === 1 ? mdName(outs[0].name) : `${outs.length} files merged`;
+  $("result-stats").textContent = `${files} · ~${estimateTokens(md).toLocaleString()} tokens`;
   $("download-zip").hidden = outs.length < 2;
 }
 
@@ -244,6 +248,7 @@ async function run() {
   const missed = { offline: 0, too_many: 0, failed: 0 };
   for (const item of state.items) { item.status = ""; item.info = "waiting"; }
   renderFiles();
+  showTab("results");
 
   const showResults = () => {
     renderOutput();
@@ -255,13 +260,13 @@ async function run() {
   for (const [i, item] of state.items.entries()) {
     if (controller.signal.aborted) { halted = true; item.info = "stopped"; continue; }
     const label = state.items.length > 1 ? `${i + 1}/${state.items.length} ${item.file.name}` : item.file.name;
-    item.status = "busy"; item.info = "converting…"; renderFiles();
+    item.status = "busy"; item.info = "converting"; renderFiles();
     const result = { name: item.file.name, raw: "" };
     // The browser draft is shown while the GPU redoes pages; its result then replaces the draft.
     const onDraft = (draft) => {
       result.raw = draft;
       if (!state.results.includes(result)) state.results.push(result);
-      item.info = `draft ready · GPU ${$("best").checked ? "redoing every page" : "reading scanned or multi-column pages"}…`; renderFiles();
+      item.info = "draft ready · GPU working"; renderFiles();
       showResults();
     };
     try {
@@ -270,7 +275,7 @@ async function run() {
       result.raw = markdown;
       if (!state.results.includes(result)) state.results.push(result);
       const tokens = estimateTokens(optimize(markdown));
-      item.status = "done"; item.info = `done · ~${tokens.toLocaleString()} tokens`;
+      item.status = "done"; item.info = `done · ${tokens.toLocaleString()} tokens`;
     } catch (e) {
       if (e.name === "AbortError") {
         halted = true;
@@ -290,7 +295,7 @@ async function run() {
   // the same inputs can be converted again.
   const clean = !halted && !failed && !Object.values(missed).some(Boolean);
   state.doneFor = clean ? inputsKey() : null;
-  $("bar").hidden = true;
+  $("working").hidden = true;
   renderFiles();
   if (state.results.length) showResults();
   const notes = [];
@@ -298,7 +303,9 @@ async function run() {
   if (halted) notes.push("Stopped. Files already converted are kept.");
   if (failed) notes.push(`${failed} file${failed > 1 ? "s" : ""} couldn't be converted.`);
   const why = "scanned pages are empty, multi-column pages may be out of order";
-  if (missed.offline) notes.push(`${n(missed.offline)} had pages that need the GPU, which is resting${$("local-only").checked ? " (or Browser only is on)" : ""}: ${why}. Try again later.`);
+  if (missed.offline) notes.push(mode() === "device"
+    ? `${n(missed.offline)} had pages that need the GPU (Device only is on): ${why}.`
+    : `${n(missed.offline)} had pages that need the GPU, which is resting: ${why}. Try again later.`);
   if (missed.too_many) notes.push(`${n(missed.too_many)} had more than ${GPU_MAX_PAGES} pages that need the GPU (over its limit): ${why}.`);
   if (missed.failed) notes.push(`The GPU server couldn't finish ${n(missed.failed)}: ${why}.`);
   setMessage(notes.join(" "), failed > 0);
@@ -341,10 +348,6 @@ $("download-zip").addEventListener("click", async () => {
   }
   save(await zip.generateAsync({ type: "blob" }), "mdbeaver-documents.zip");
 });
-
-// --- donate ------------------------------------------------------------
-$("donate-open").addEventListener("click", () => $("donate").showModal());
-$("donate").addEventListener("click", (e) => { if (e.target === $("donate")) $("donate").close(); }); // click outside
 
 refreshStatus();
 setInterval(refreshStatus, 15000);

@@ -9,6 +9,11 @@ const files = {
   "node_modules/pdfjs-dist/build/pdf.min.mjs": "vendor/pdf.min.mjs",
   "node_modules/pdfjs-dist/build/pdf.worker.min.mjs": "vendor/pdf.worker.min.mjs",
   "node_modules/jszip/dist/jszip.min.js": "vendor/jszip.min.js",
+  // IBM Plex (OFL-1.1), Latin subsets; CJK text falls back to system fonts.
+  ...Object.fromEntries([["sans", 400], ["sans", 500], ["sans", 600], ["mono", 400], ["mono", 500]].map(([f, w]) => [
+    `node_modules/@fontsource/ibm-plex-${f}/files/ibm-plex-${f}-latin-${w}-normal.woff2`,
+    `vendor/fonts/plex-${f}-${w}.woff2`,
+  ])),
 };
 
 // pdf.js data it fetches on demand: CMaps (without them, PDFs whose CJK fonts use predefined
@@ -18,7 +23,7 @@ const dirs = {
   "node_modules/pdfjs-dist/standard_fonts": "vendor/standard_fonts",
 };
 
-mkdirSync(join(root, "vendor"), { recursive: true });
+mkdirSync(join(root, "vendor", "fonts"), { recursive: true });
 for (const [src, dst] of Object.entries(files)) {
   copyFileSync(join(root, src), join(root, dst));
   console.log(`vendored ${dst}`);
