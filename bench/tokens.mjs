@@ -9,6 +9,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { getEncoding } from "js-tiktoken";
 import JSZip from "jszip";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
@@ -34,7 +35,7 @@ function language(text) {
 }
 
 // Baseline: what you get by copy-pasting the text with no structure (like pdftotext).
-async function plainText(kind, bytes) {
+export async function plainText(kind, bytes) {
   if (kind === "pdf") {
     const doc = await pdfjs.getDocument({ data: new Uint8Array(bytes), isEvalSupported: false, verbosity: 0 }).promise;
     const pages = [];
@@ -134,4 +135,5 @@ async function main() {
   console.log(`\nSaved ${out}`);
 }
 
-main();
+// Run only as a script, so variants.mjs can import plainText.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) main();
