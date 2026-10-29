@@ -54,7 +54,9 @@ class JobStore:
         return next(i for i, j in enumerate(self.queued()) if j.id == job.id) + 1
 
     def worker_online(self) -> bool:
-        return time.time() - self.worker_last_seen < self.s.worker_online_window_sec
+        # A worker busy with a long job does not call claim, so a running job also counts as alive.
+        recent = time.time() - self.worker_last_seen < self.s.worker_online_window_sec
+        return recent or any(j.status == RUNNING for j in self.jobs.values())
 
     def allow_ip(self, ip: str) -> bool:
         now = time.time()
@@ -113,6 +115,9 @@ class JobStore:
                 self.remove(job.id)
             elif job.status == QUEUED and now - job.created > self.s.job_timeout_sec * 2:
                 self.finish(job, error="expired")
+            elif job.status == QUEUED and not self.worker_online():
+                # Nobody will pick it up; fail now so the browser converts it locally instead.
+                self.finish(job, error="worker_offline")
 
 
 def new_job_id() -> str:

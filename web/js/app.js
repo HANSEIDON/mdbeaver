@@ -133,7 +133,12 @@ async function convertServer(item, label) {
     else if (s.status === "done") {
       fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {});
       return s.markdown;
-    } else throw new Error(s.error || "failed");
+    } else {
+      // Server-side failures (worker went offline, too many pages, engine error) fall back to the browser.
+      const err = new Error(s.error || "failed");
+      err.fallback = true;
+      throw err;
+    }
   }
 }
 
@@ -200,7 +205,7 @@ async function run() {
   }
   const notes = [];
   if (failed) notes.push(`${failed} file${failed > 1 ? "s" : ""} couldn't be converted.`);
-  if (fellBack) notes.push("Our server was busy, so some PDFs ran in your browser.");
+  if (fellBack) notes.push("The GPU server couldn't take some PDFs, so they ran in your browser.");
   setMessage(notes.join(" "), failed > 0);
 }
 $("run").addEventListener("click", run);

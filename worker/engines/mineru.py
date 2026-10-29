@@ -15,10 +15,14 @@ import time
 from pathlib import Path
 
 import httpx
+import pypdfium2 as pdfium
 
 NAME = "mineru"
 API = os.environ.get("MDB_MINERU_URL", "http://127.0.0.1:8010").rstrip("/")
 TIERS = {"fast": "standard", "precise": "advanced"}
+# The GPU is a single home card shared with other work; long documents would hold it for many
+# minutes per job. Larger files still convert in the browser.
+MAX_PAGES = int(os.environ.get("MDB_MAX_GPU_PAGES", 50))
 WAIT_SECONDS = 900
 SKIP_BLOCKS = {"header", "footer", "page_number"}
 
@@ -65,6 +69,12 @@ def _result(client: httpx.Client, resp: httpx.Response) -> dict:
 def convert(path: Path, kind: str, mode: str) -> str:
     if kind != "pdf":
         raise ValueError("unsupported_kind")
+    pdf = pdfium.PdfDocument(str(path))
+    try:
+        if len(pdf) > MAX_PAGES:
+            raise ValueError("too_many_pages")
+    finally:
+        pdf.close()
     request = {
         "files": [{"source": {"type": "inline", "name": f"input.{kind}",
                               "data": base64.b64encode(path.read_bytes()).decode()}}],
