@@ -122,6 +122,7 @@ code { font: 0.92em var(--mono); color: var(--ink-2); background: var(--surface-
 .btn.primary:hover, .btn.run:hover:not(:disabled) { background: var(--honey-dark); }
 .btn.run { padding: 11px 28px; font-size: 15px; }
 .btn.run:disabled { background: var(--surface-3); border-color: var(--surface-3); color: var(--ink-3); }
+.btn.stop { padding: 11px 20px; font-size: 15px; color: var(--danger); border-color: var(--danger); }
 
 /* mobile: stack vertically */
 @media (max-width: 900px) {

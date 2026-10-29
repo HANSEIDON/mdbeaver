@@ -2,7 +2,9 @@ import { estimateTokens, merge, optimize } from "./output.js";
 
 const $ = (id) => document.getElementById(id);
 const KINDS = { pdf: "PDF", docx: "DOCX", pptx: "PPTX" };
-const state = { items: [], workerOnline: false, maxMb: 50, busy: false, results: [] };
+// doneFor: the inputs of the last complete run; Convert stays off until files or options change,
+// so a stray click does not convert (and upload) everything again. abort: the running run's stop.
+const state = { items: [], workerOnline: false, maxMb: 50, busy: false, results: [], doneFor: null, abort: null };
 
 // --- worker status -----------------------------------------------------
 async function refreshStatus() {
@@ -38,8 +40,19 @@ function showTab(name) {
   $("tab-results").hidden = name !== "results";
 }
 document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
-$("local-only").addEventListener("change", renderRoute);
-$("best").addEventListener("change", renderRoute);
+// What a run depends on; "Keep page numbers" only re-renders the output, so it is not part of it.
+const inputsKey = () => JSON.stringify([state.items.map((it) => [it.file.name, it.file.size, it.file.lastModified]),
+  $("best").checked, $("local-only").checked]);
+
+function renderRun() {
+  const done = !state.busy && state.items.length > 0 && state.doneFor === inputsKey();
+  $("run").disabled = state.busy || !state.items.length || done;
+  $("run").textContent = state.busy ? "Converting…" : done ? "Converted ✓" : "Convert";
+  $("stop").hidden = !state.busy;
+  if (!state.busy) $("stop").disabled = false;
+}
+
+for (const id of ["local-only", "best"]) $(id).addEventListener("change", () => { renderRoute(); renderRun(); });
 $("keep-pages").addEventListener("change", () => { if (state.results.length) renderOutput(); });
 
 // --- file list ---------------------------------------------------------
@@ -70,7 +83,7 @@ function renderFiles() {
   }));
   list.hidden = !state.items.length;
   $("drop").classList.toggle("compact", state.items.length > 0);
-  $("run").disabled = state.busy || !state.items.length;
+  renderRun();
   renderRoute();
 }
 
@@ -111,29 +124,40 @@ const CONVERTERS = {
   pptx: () => import("./pptx-local.js").then((m) => m.pptxToMarkdown),
 };
 
-async function convertLocal(item, label) {
+const stopped = () => new DOMException("stopped", "AbortError");
+
+// The converters report progress per page; Stop takes effect at the next page.
+async function convertLocal(item, label, signal) {
   const convert = await CONVERTERS[item.kind]();
-  return convert(item.file, (f) => progress(`${label} · chewing in your browser`, f));
+  return convert(item.file, (f) => {
+    if (signal?.aborted) throw stopped();
+    progress(`${label} · chewing in your browser`, f);
+  });
 }
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms, signal) => new Promise((resolve, reject) => {
+  const t = setTimeout(resolve, ms);
+  signal?.addEventListener("abort", () => { clearTimeout(t); reject(stopped()); }, { once: true });
+});
 
-async function convertServer(item, label, mode, pages) {
+async function convertServer(item, label, mode, pages, signal) {
   progress(`${label} · uploading`);
   const form = new FormData();
   form.append("file", item.file);
   form.append("mode", mode);
   if (pages) form.append("pages", pages.join(","));
-  const r = await fetch("/api/jobs", { method: "POST", body: form });
+  const r = await fetch("/api/jobs", { method: "POST", body: form, signal });
   if (!r.ok) {
     const err = new Error((await r.json().catch(() => ({}))).detail || `http_${r.status}`);
     err.fallback = [429, 502, 503, 504].includes(r.status);
     throw err;
   }
   const { id } = await r.json();
+  // On Stop, withdraw the job so the GPU does not work on it (and the file is deleted at once).
+  signal?.addEventListener("abort", () => fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {}), { once: true });
   for (;;) {
-    await sleep(1500);
-    const s = await (await fetch(`/api/jobs/${id}`, { cache: "no-store" })).json();
+    await sleep(1500, signal);
+    const s = await (await fetch(`/api/jobs/${id}`, { cache: "no-store", signal })).json();
     if (s.status === "queued") progress(`${label} · in line #${s.position}`);
     else if (s.status === "running") progress(`${label} · the GPU beaver is chewing`);
     else if (s.status === "done") {
@@ -166,8 +190,8 @@ function replacePages(local, gpu) {
 
 // Returns { markdown, gpu } where gpu is "unneeded", "done", or why scanned pages stayed empty:
 // "offline" (no worker / browser-only), "too_many" (over GPU_MAX_PAGES) or "failed".
-async function convert(item, label, onDraft) {
-  const local = await convertLocal(item, label);
+async function convert(item, label, onDraft, signal) {
+  const local = await convertLocal(item, label, signal);
   if (item.kind !== "pdf") return { markdown: local, gpu: "unneeded" };
   const { SCANNED_PAGE, NEEDS_GPU } = await import("./pdf-local.js");
   const pages = splitPages(local);
@@ -183,7 +207,7 @@ async function convert(item, label, onDraft) {
   if (target.length > GPU_MAX_PAGES) return missed("too_many");
   onDraft(local);
   try {
-    const gpu = await convertServer(item, label, best ? "precise" : "fast", best ? null : target);
+    const gpu = await convertServer(item, label, best ? "precise" : "fast", best ? null : target, signal);
     return { markdown: replacePages(local, gpu), gpu: "done" };
   } catch (e) {
     if (!e.fallback) throw e;
@@ -212,8 +236,11 @@ async function run() {
   if (!state.items.length || state.busy) return;
   state.busy = true;
   state.results = [];
+  const controller = new AbortController();
+  state.abort = controller;
   setMessage("");
   let failed = 0;
+  let halted = false;
   const missed = { offline: 0, too_many: 0, failed: 0 };
   for (const item of state.items) { item.status = ""; item.info = "waiting"; }
   renderFiles();
@@ -226,6 +253,7 @@ async function run() {
   };
 
   for (const [i, item] of state.items.entries()) {
+    if (controller.signal.aborted) { halted = true; item.info = "stopped"; continue; }
     const label = state.items.length > 1 ? `${i + 1}/${state.items.length} ${item.file.name}` : item.file.name;
     item.status = "busy"; item.info = "converting…"; renderFiles();
     const result = { name: item.file.name, raw: "" };
@@ -237,25 +265,37 @@ async function run() {
       showResults();
     };
     try {
-      const { markdown, gpu } = await convert(item, label, onDraft);
+      const { markdown, gpu } = await convert(item, label, onDraft, controller.signal);
       if (gpu in missed) missed[gpu]++;
       result.raw = markdown;
       if (!state.results.includes(result)) state.results.push(result);
       const tokens = estimateTokens(optimize(markdown));
       item.status = "done"; item.info = `done · ~${tokens.toLocaleString()} tokens`;
     } catch (e) {
-      failed++;
-      item.status = "error"; item.info = `failed (${e.message || e})`;
+      if (e.name === "AbortError") {
+        halted = true;
+        item.status = "";
+        item.info = state.results.includes(result) ? "stopped · browser draft kept" : "stopped";
+      } else {
+        failed++;
+        item.status = "error"; item.info = `failed (${e.message || e})`;
+      }
     }
     renderFiles();
   }
 
   state.busy = false;
+  state.abort = null;
+  // Lock Convert only after a clean, complete run; after a stop, failure or skipped GPU pages
+  // the same inputs can be converted again.
+  const clean = !halted && !failed && !Object.values(missed).some(Boolean);
+  state.doneFor = clean ? inputsKey() : null;
   $("bar").hidden = true;
   renderFiles();
   if (state.results.length) showResults();
   const notes = [];
   const n = (k) => `${k} PDF${k > 1 ? "s" : ""}`;
+  if (halted) notes.push("Stopped. Files already converted are kept.");
   if (failed) notes.push(`${failed} file${failed > 1 ? "s" : ""} couldn't be converted.`);
   const why = "scanned pages are empty, multi-column pages may be out of order";
   if (missed.offline) notes.push(`${n(missed.offline)} had pages that need the GPU, which is resting${$("local-only").checked ? " (or Browser only is on)" : ""}: ${why}. Try again later.`);
@@ -264,6 +304,11 @@ async function run() {
   setMessage(notes.join(" "), failed > 0);
 }
 $("run").addEventListener("click", run);
+$("stop").addEventListener("click", () => {
+  state.abort?.abort();
+  $("stop").disabled = true; // until the run winds down (at most one page)
+  progress("Stopping…");
+});
 
 // --- export ------------------------------------------------------------
 function save(blob, name) {

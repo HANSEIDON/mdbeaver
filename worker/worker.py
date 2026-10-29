@@ -61,6 +61,9 @@ def process(client: httpx.Client, engine, job: dict) -> None:
     with tempfile.TemporaryDirectory(prefix="mdb-") as tmp:
         path = Path(tmp) / f"input.{job['kind']}"
         with client.stream("GET", f"/api/worker/jobs/{job_id}/file") as resp:
+            if resp.status_code == 404:  # the user pressed Stop before we got the file
+                log.info("job %s withdrawn", job_id)
+                return
             resp.raise_for_status()
             with path.open("wb") as out:
                 for chunk in resp.iter_bytes():
@@ -74,7 +77,11 @@ def process(client: httpx.Client, engine, job: dict) -> None:
             log.warning("job %s failed: %s", job_id, code)
             client.post(f"/api/worker/jobs/{job_id}/fail", json={"error": code[:200]})
             return
-    client.post(f"/api/worker/jobs/{job_id}/result", json={"markdown": markdown}).raise_for_status()
+    resp = client.post(f"/api/worker/jobs/{job_id}/result", json={"markdown": markdown})
+    if resp.status_code == 404:  # withdrawn (Stop) while we were converting: nothing to deliver
+        log.info("job %s withdrawn after %.1fs", job_id, time.monotonic() - started)
+        return
+    resp.raise_for_status()
     log.info("job %s done in %.1fs (%d chars)", job_id, time.monotonic() - started, len(markdown))
 
 

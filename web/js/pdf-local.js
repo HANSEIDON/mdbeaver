@@ -198,16 +198,21 @@ export async function pdfToMarkdown(file, onProgress, { keepHeaders = false } = 
   let pages = [];
   const figures = [];
   const views = [];
-  for (let p = 1; p <= doc.numPages; p++) {
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-    const lines = toLines(content.items);
-    if (unreadable(lines)) lines.length = 0;
-    lines.height = page.view[3] - page.view[1];
-    pages.push(lines);
-    views.push(page.view);
-    figures.push(lines.length ? figureBoxes(await imageBoxes(page), page.view, lines) : []); // no text = scan, not a figure
-    onProgress?.(p / doc.numPages);
+  try {
+    for (let p = 1; p <= doc.numPages; p++) {
+      const page = await doc.getPage(p);
+      const content = await page.getTextContent();
+      const lines = toLines(content.items);
+      if (unreadable(lines)) lines.length = 0;
+      lines.height = page.view[3] - page.view[1];
+      pages.push(lines);
+      views.push(page.view);
+      figures.push(lines.length ? figureBoxes(await imageBoxes(page), page.view, lines) : []); // no text = scan, not a figure
+      onProgress?.(p / doc.numPages); // throws when the user presses Stop
+    }
+  } catch (e) {
+    await doc.destroy();
+    throw e;
   }
   if (!keepHeaders) pages = stripRunningLines(pages);
   // A picture at the same place on most pages is a template (logo, slide background), not a figure.
