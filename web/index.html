@@ -31,26 +31,30 @@
   </header>
 
   <main class="split">
-    <section class="pane source" aria-label="Files">
+    <section class="pane source is-empty" aria-label="Files">
       <div class="intro">
         <h1>Documents, gnawed down to <em>lean Markdown</em>.</h1>
         <p class="langs">Korean · Chinese · English</p>
       </div>
-      <p class="label">Upload</p>
-      <div id="drop" class="drop" tabindex="0" role="button" aria-label="Add documents">
-        <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
-        <p class="drop-title">Drag files here</p>
-        <span class="btn">Browse files</span>
-        <input id="file" type="file" multiple accept=".pdf,.docx,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
+      <div class="upload">
+        <p class="label">Upload</p>
+        <div id="drop" class="drop" tabindex="0" role="button" aria-label="Add documents">
+          <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/></svg>
+          <p class="drop-title">Drag files here</p>
+          <span class="btn">Browse files</span>
+          <p class="drop-formats">PDF · DOCX · PPTX</p>
+          <input id="file" type="file" multiple accept=".pdf,.docx,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
+        </div>
       </div>
-      <p class="formats">PDF, DOCX, PPTX · add several at once · uploads are deleted right after conversion</p>
 
-      <p class="label files-label">Files</p>
-      <table class="files">
-        <thead><tr><th scope="col">Name</th><th scope="col" class="num">Size</th><th scope="col" class="num">Status</th><th scope="col"><span class="sr">Remove</span></th></tr></thead>
-        <tbody id="files"></tbody>
-      </table>
-      <p id="no-files" class="no-files">No files yet.</p>
+      <div class="file-list">
+        <p class="label">Files</p>
+        <table class="files">
+          <thead><tr><th scope="col">Name</th><th scope="col" class="num">Size</th><th scope="col" class="num">Status</th><th scope="col"><span class="sr">Remove</span></th></tr></thead>
+          <tbody id="files"></tbody>
+        </table>
+        <p id="no-files" class="no-files">No files yet.</p>
+      </div>
     </section>
 
     <section class="pane panel" aria-label="Conversion">
@@ -72,16 +76,6 @@
 
         <div class="group">
           <p class="label">Output</p>
-          <div class="profile">
-            <p class="profile-name">AI-optimized Markdown</p>
-            <ul class="profile-list">
-              <li>Headings, lists, tables and formulas (LaTeX) kept</li>
-              <li>Page headers, footers and page numbers removed</li>
-              <li>Compact tables, no decorative lines or invisible characters</li>
-              <li>Figures marked, so the AI can ask you for the image</li>
-              <li>Several files merged into one, each wrapped in <code>&lt;document&gt;</code></li>
-            </ul>
-          </div>
           <label class="check">
             <input id="keep-pages" type="checkbox">
             <span>Keep page numbers<small>Adds <code>[p.12]</code> so the AI can cite pages</small></span>

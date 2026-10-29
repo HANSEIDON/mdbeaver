@@ -90,6 +90,7 @@ function renderFiles() {
   $("files").parentElement.classList.toggle("has-rows", state.items.length > 0);
   $("no-files").hidden = state.items.length > 0;
   $("drop").classList.toggle("compact", state.items.length > 0);
+  document.querySelector(".source").classList.toggle("is-empty", !state.items.length);
   renderRun();
   renderRoute();
 }
