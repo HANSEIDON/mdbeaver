@@ -1,3 +1,10 @@
+@font-face { font-family: "Geist"; src: url("/vendor/fonts/geist-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Geist"; src: url("/vendor/fonts/geist-sans-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Geist"; src: url("/vendor/fonts/geist-sans-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Geist"; src: url("/vendor/fonts/geist-sans-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("/vendor/fonts/geist-mono-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("/vendor/fonts/geist-mono-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+
 :root {
   --bg: #15273a;
   --panel: #182c42;
@@ -16,9 +23,8 @@
   --danger: #f59a8a;
   --fur: #c98a4b;
   --nose: #5a3a1e;
-  --sans: "Inter", system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: "Geist", system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, Consolas, monospace;
   --header: 56px;
   --r: 3px;
   color-scheme: dark;
@@ -42,16 +48,16 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
 .logo { width: 26px; height: 26px; }
 .logo-face { fill: var(--fur); } .logo-eye { fill: var(--bg); } .logo-nose { fill: var(--nose); } .logo-tooth { fill: #fff; }
-.wordmark { font-weight: 600; font-size: 17px; }
+.wordmark { font-weight: 700; font-size: 17px; letter-spacing: -0.03em; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; }
 .nav a { text-decoration: none; }
 .nav a:hover { color: var(--accent); }
 .nav .gh { display: inline-flex; align-items: center; gap: 7px; }
 .nav .gh svg { width: 16px; height: 16px; fill: currentColor; }
-.nav .cta { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: var(--r); background: var(--accent); color: var(--accent-ink); font-weight: 600; transition: background 0.15s, transform 0.15s; }
+.nav .cta { display: inline-block; padding: 7px 14px; border-radius: var(--r); background: var(--accent); color: var(--accent-ink); font-weight: 600; transition: background 0.15s, transform 0.15s; }
 .nav .cta:hover { color: var(--accent-ink); background: #ffdc6e; }
 .nav .cta { white-space: nowrap; }
-.nav .cta > span[aria-hidden] { transition: transform 0.15s; }
+.nav .cta > span[aria-hidden] { display: inline-block; margin-left: 2px; transition: transform 0.15s; }
 .nav .cta:hover > span[aria-hidden] { transform: translateX(3px); }
 .status { white-space: nowrap; display: inline-flex; align-items: center; gap: 7px; font: 12px var(--mono); letter-spacing: 0.04em; color: var(--ink-3); }
 .status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); }
@@ -68,8 +74,8 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .source.is-empty .drop { padding: 64px 16px; }
 .source.is-empty .file-list { display: none; }
 .intro { margin: 4px 0 28px; }
-.intro h1 { margin: 0; font: 400 clamp(26px, 2.6vw, 34px)/1.2 var(--serif); letter-spacing: -0.01em; }
-.intro h1 em { color: var(--accent); }
+.intro h1 { margin: 0; font: 600 clamp(24px, 2.4vw, 32px)/1.2 var(--sans); letter-spacing: -0.025em; }
+.intro h1 em { font-style: normal; color: var(--accent); }
 .langs { margin: 8px 0 0; font: 12px var(--mono); letter-spacing: 0.04em; color: var(--ink-3); }
 .panel { background: var(--panel); display: flex; flex-direction: column; height: calc(100vh - var(--header)); position: sticky; top: var(--header); }
 
@@ -190,8 +196,8 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 
 /* about */
 .about { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; display: flex; flex-direction: column; gap: 56px; }
-.about h1 { margin: 0 0 14px; font: 400 46px/1.1 var(--serif); letter-spacing: -0.01em; }
-.about h2 { margin: 0 0 16px; font: 400 27px/1.2 var(--serif); }
+.about h1 { margin: 0 0 14px; font: 600 44px/1.1 var(--sans); letter-spacing: -0.03em; }
+.about h2 { margin: 0 0 16px; font: 600 24px/1.25 var(--sans); letter-spacing: -0.02em; }
 .about p { margin: 0 0 12px; color: var(--ink-2); }
 .lead { font-size: 17px; }
 .about a { color: var(--ink); }
@@ -204,7 +210,7 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .facts { margin: 0 0 12px; padding-left: 20px; color: var(--ink-2); display: flex; flex-direction: column; gap: 6px; }
 
 .stat { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 20px !important; }
-.stat-big { font: 400 64px/1 var(--serif); color: var(--accent); letter-spacing: -0.02em; }
+.stat-big { font: 600 60px/1 var(--sans); color: var(--accent); letter-spacing: -0.02em; }
 .stat-text { flex: 1 1 260px; color: var(--ink-2); }
 .chart { margin: 0 0 14px; padding: 18px 18px 14px; background: var(--raise); border: 1px solid var(--line); border-radius: var(--r); }
 .chart-title { margin: 0 0 16px; font-weight: 500; color: var(--ink); }
