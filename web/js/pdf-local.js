@@ -5,41 +5,95 @@ import * as pdfjs from "/vendor/pdf.min.mjs";
 pdfjs.GlobalWorkerOptions.workerSrc = "/vendor/pdf.worker.min.mjs";
 
 const MAX_PAGES = 500;
-// Body of a page with no text layer; app.js looks for it to send those pages to the GPU.
+// Body of a page with no (usable) text layer; app.js looks for it to send those pages to the GPU.
 export const SCANNED_PAGE = "_(no text layer — scanned page, needs OCR)_";
+// Appended to pages that have text but a layout the browser can only guess (columns, big tables);
+// app.js sends them to the GPU too and output.js drops the marker.
+export const NEEDS_GPU = "<!-- needs-gpu -->";
 
 function fontSize(item) {
   return Math.hypot(item.transform[2], item.transform[3]) || item.height || 0;
 }
 
+// Text, horizontal extent and size of items on one baseline (items sorted by x).
+function joinItems(y, items) {
+  let text = "";
+  let prevEnd = null;
+  for (const it of items) {
+    const x = it.transform[4];
+    if (prevEnd !== null && x - prevEnd > fontSize(it) * 0.25 && !text.endsWith(" ")) text += " ";
+    text += it.str;
+    prevEnd = x + (it.width || 0);
+  }
+  const last = items[items.length - 1];
+  return { y, items, text: text.trim(), size: Math.max(...items.map(fontSize)),
+    left: items[0].transform[4], right: last.transform[4] + (last.width || 0) };
+}
+
 function toLines(items) {
-  const lines = [];
+  const rows = [];
   for (const it of items) {
     if (!it.str || !it.str.trim()) continue;
     const y = it.transform[5];
     const size = fontSize(it);
-    let line = lines.find((l) => Math.abs(l.y - y) < Math.max(2, size * 0.4));
-    if (!line) lines.push((line = { y, size: 0, items: [] }));
-    line.items.push(it);
-    line.size = Math.max(line.size, size);
+    let row = rows.find((r) => Math.abs(r.y - y) < Math.max(2, size * 0.4));
+    if (!row) rows.push((row = { y, items: [] }));
+    row.items.push(it);
   }
-  lines.sort((a, b) => b.y - a.y);
-  for (const l of lines) {
-    l.items.sort((a, b) => a.transform[4] - b.transform[4]);
-    let text = "";
-    let prevEnd = null;
-    for (const it of l.items) {
-      const x = it.transform[4];
-      if (prevEnd !== null && x - prevEnd > fontSize(it) * 0.25 && !text.endsWith(" ")) text += " ";
-      text += it.str;
-      prevEnd = x + (it.width || 0);
+  rows.sort((a, b) => b.y - a.y);
+  return rows.map((r) => joinItems(r.y, r.items.sort((a, b) => a.transform[4] - b.transform[4])));
+}
+
+// Two-column pages: one baseline holds a left-column and a right-column line, so reading by y
+// mixes the columns. If many lines have a wide gap across the page centre, every line is split
+// there and the columns are read one after the other between full-width lines (titles, notes).
+// Returns { lines } in reading order (column starts marked `columnStart`) for two columns,
+// { lines: null } for a table-like page (many wide gaps per line: left as is, but the GPU reads
+// tables better too), or null for an ordinary single-column page.
+function columnOrder(lines, view) {
+  const width = view[2] - view[0];
+  const centre = view[0] + width / 2;
+  const slack = width * 0.06;
+  const gapsOf = (l) => {
+    const gaps = [];
+    for (let j = 1; j < (l.items?.length ?? 0); j++) {
+      const a = l.items[j - 1], b = l.items[j];
+      const end = a.transform[4] + (a.width || 0), start = b.transform[4];
+      if (start - end > width * 0.015) gaps.push({ j, end, start });
     }
-    l.text = text.trim();
-    const last = l.items[l.items.length - 1];
-    l.left = l.items[0].transform[4];
-    l.right = last.transform[4] + (last.width || 0);
+    return gaps;
+  };
+  const splitAt = (l) => gapsOf(l).find((g) => g.end < centre + slack && g.start > centre - slack)?.j ?? -1;
+  const splitLines = lines.filter((l) => splitAt(l) > 0);
+  if (splitLines.length < Math.max(5, lines.length * 0.25)) return null;
+  if (splitLines.filter((l) => gapsOf(l).length > 1).length > splitLines.length * 0.3) return { lines: null };
+
+  const out = [];
+  let left = [], right = [];
+  const flushColumns = () => {
+    for (const col of [left, right]) col.forEach((l, k) => out.push(k ? l : { ...l, columnStart: true }));
+    left = []; right = [];
+  };
+  for (const l of lines) {
+    const j = splitAt(l);
+    if (j > 0) {
+      left.push(joinItems(l.y, l.items.slice(0, j)));
+      right.push(joinItems(l.y, l.items.slice(j)));
+    } else if (l.right <= centre + slack) left.push(l);
+    else if (l.left >= centre - slack) right.push(l);
+    else { flushColumns(); out.push(l); }
   }
-  return lines;
+  flushColumns();
+  return { lines: out };
+}
+
+// A text layer that is mostly punctuation or private-use glyphs (fonts without a usable character
+// map) is as useless as none: the page is treated like a scan so the GPU reads it instead.
+function unreadable(lines) {
+  const text = lines.map((l) => l.text).join("").replace(/\s+/g, "");
+  if (text.length < 20) return false;
+  const letters = (text.match(/[\p{L}\p{N}]/gu) || []).length;
+  return letters < text.length * 0.5;
 }
 
 function bodySize(pages) {
@@ -135,16 +189,23 @@ function heading(size, body) {
 
 export async function pdfToMarkdown(file, onProgress, { keepHeaders = false } = {}) {
   const data = new Uint8Array(await file.arrayBuffer());
-  const doc = await pdfjs.getDocument({ data, isEvalSupported: false }).promise;
+  const assets = globalThis.MDB_PDFJS_ASSETS ?? "/vendor/"; // the bench (Node) points this at pdfjs-dist
+  const doc = await pdfjs.getDocument({
+    data, isEvalSupported: false,
+    cMapUrl: `${assets}cmaps/`, cMapPacked: true, standardFontDataUrl: `${assets}standard_fonts/`,
+  }).promise;
   if (doc.numPages > MAX_PAGES) throw new Error("too_many_pages");
   let pages = [];
   const figures = [];
+  const views = [];
   for (let p = 1; p <= doc.numPages; p++) {
     const page = await doc.getPage(p);
     const content = await page.getTextContent();
     const lines = toLines(content.items);
+    if (unreadable(lines)) lines.length = 0;
     lines.height = page.view[3] - page.view[1];
     pages.push(lines);
+    views.push(page.view);
     figures.push(lines.length ? figureBoxes(await imageBoxes(page), page.view, lines) : []); // no text = scan, not a figure
     onProgress?.(p / doc.numPages);
   }
@@ -155,7 +216,7 @@ export async function pdfToMarkdown(file, onProgress, { keepHeaders = false } = 
   for (const boxes of figures) for (const k of new Set(boxes.map(where))) seen.set(k, (seen.get(k) || 0) + 1);
   const template = (b) => pages.length > 1 && seen.get(where(b)) >= Math.max(2, Math.ceil(pages.length * 0.5));
   pages.forEach((lines, i) => {
-    for (const b of figures[i]) if (!template(b)) lines.push({ y: b.top, size: 0, text: "<!-- figure -->", figure: true });
+    for (const b of figures[i]) if (!template(b)) lines.push({ y: b.top, size: 0, text: "<!-- figure -->", figure: true, left: b.left, right: b.right });
     lines.sort((a, b) => b.y - a.y);
   });
   const body = bodySize(pages);
@@ -169,16 +230,24 @@ export async function pdfToMarkdown(file, onProgress, { keepHeaders = false } = 
     let para = [];
     let prev = null;
     const flush = () => { if (para.length) out.push(para.join(" ")); para = []; };
-    for (const l of lines) {
+    // A gap only ends a paragraph when it is wider than this page's usual line spacing
+    // (Chinese journals set lines ~2× the font size apart).
+    const text = lines.filter((l) => !l.figure);
+    const gaps = text.slice(1).map((l, j) => text[j].y - l.y).filter((g) => g > 0).sort((a, b) => a - b);
+    const usual = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 0;
+    const columns = columnOrder(lines, views[i]);
+    for (const l of columns?.lines ?? lines) {
+      if (l.columnStart) { flush(); prev = null; }
       if (l.figure) { flush(); out.push(l.text); prev = null; continue; }
       const h = heading(l.size, body);
       if (h) { flush(); out.push(h + l.text); prev = null; continue; }
-      if (prev && prev.y - l.y > Math.max(prev.size, l.size) * 1.8) flush();
+      if (prev && prev.y - l.y > Math.max(Math.max(prev.size, l.size) * 1.8, usual * 1.4)) flush();
       if (/^([•▪●◦\-–*]|\d+[.)])\s/.test(l.text)) { flush(); out.push(l.text.replace(/^[•▪●◦–*]\s*/, "- ")); prev = l; continue; }
       para.push(l.text);
       prev = l;
     }
     flush();
+    if (columns) out.push(NEEDS_GPU); // columns/tables are a guess here: the GPU's layout analysis is better
   });
   await doc.destroy();
   return out.join("\n\n").replace(/(\w)- (\w)/g, "$1$2") + "\n";

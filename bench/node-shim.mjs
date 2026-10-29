@@ -10,6 +10,8 @@ register("./vendor-hook.mjs", import.meta.url);
 const { window } = new JSDOM("");
 globalThis.DOMParser = window.DOMParser;
 globalThis.window = { JSZip };
+// pdf-local.js loads CMaps/standard fonts from "/vendor/" on the site; under Node, from pdfjs-dist.
+globalThis.MDB_PDFJS_ASSETS = new URL("./node_modules/pdfjs-dist/", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
 
 // Minimal File stand-in: a Uint8Array (JSZip reads it directly) with arrayBuffer() for pdf.js.
 globalThis.BenchFile = class BenchFile extends Uint8Array {

@@ -30,14 +30,14 @@ function splitPages(markdown) {
   return pages;
 }
 
-function hybrid(local, gpu, scannedMarker) {
+function hybrid(local, gpu, markers) {
   const pages = splitPages(local);
   const gpuPages = splitPages(gpu);
-  for (const [n, chunk] of pages) if (chunk.endsWith(scannedMarker) && gpuPages.has(n)) pages.set(n, gpuPages.get(n));
+  for (const [n, chunk] of pages) if (markers.some((m) => chunk.endsWith(m)) && gpuPages.has(n)) pages.set(n, gpuPages.get(n));
   return [...pages.entries()].sort((a, b) => a[0] - b[0]).map(([, c]) => c).join("\n\n") + "\n";
 }
 
-const { pdfToMarkdown, SCANNED_PAGE } = await import("../web/js/pdf-local.js");
+const { pdfToMarkdown, SCANNED_PAGE, NEEDS_GPU } = await import("../web/js/pdf-local.js");
 for (const name of (await readdir(DOCS)).filter((f) => f.endsWith(".pdf")).sort()) {
   const doc = name.replace(/\.pdf$/, "");
   const gpuPath = join(ROOT, "out", `worker-mineru-${doc}.md`);
@@ -45,7 +45,7 @@ for (const name of (await readdir(DOCS)).filter((f) => f.endsWith(".pdf")).sort(
   const bytes = await readFile(join(DOCS, name));
   const local = await pdfToMarkdown(new globalThis.BenchFile(bytes, name));
   const gpu = await readFile(gpuPath, "utf8");
-  const raw = { browser: local, hybrid: hybrid(local, gpu, SCANNED_PAGE), best: gpu };
+  const raw = { browser: local, hybrid: hybrid(local, gpu, [SCANNED_PAGE, NEEDS_GPU]), best: gpu };
   // The site's "Best quality" runs MinerU's advanced tier (mode "precise"): charts become tables,
   // diagrams Mermaid or a description. `best` above is the standard tier (mode "fast").
   const precisePath = join(ROOT, "out", `worker-mineru-precise-${doc}.md`);

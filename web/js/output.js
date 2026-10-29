@@ -39,6 +39,12 @@ export function optimize(markdown, { keepPages = false } = {}) {
     .replace(INVISIBLE, "")
     .replace(ODD_SPACES, " ")
     .replace(/[ﬀ-ﬆ]/g, (c) => LIGATURES[c] ?? c)
+    // Full-width Latin letters and digits (common in Chinese typesetting) cost far more tokens than
+    // ASCII; CJK punctuation (，。：) is left alone.
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    // Chinese/Japanese have no spaces between characters; justified layouts make text extraction
+    // insert them ("美 学 理 论"). Hangul is excluded: Korean separates words with spaces.
+    .replace(/(?<=[　-〿぀-ヿ一-鿿＀-￯])[ \t]+(?=[　-〿぀-ヿ一-鿿＀-￯])/g, "")
     .replace(/<table[\s\S]*?<\/table>/gi, htmlTableToMarkdown);
 
   const out = [];
@@ -47,6 +53,7 @@ export function optimize(markdown, { keepPages = false } = {}) {
   for (let line of md.split("\n")) {
     const page = line.match(/^<!-- page (\d+) -->$/);
     if (page) { pageNo = page[1]; if (keepPages) out.push(`[p.${pageNo}]`); continue; }
+    if (line.trim() === "<!-- needs-gpu -->") continue; // routing hint for app.js, not content
     const figure = line.trim().match(/^<!-- figure(?::\s*(.*?))? -->$/);
     if (figure) {
       const where = pageNo ? `, p.${pageNo}` : "";

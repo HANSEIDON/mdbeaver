@@ -169,10 +169,11 @@ function replacePages(local, gpu) {
 async function convert(item, label, onDraft) {
   const local = await convertLocal(item, label);
   if (item.kind !== "pdf") return { markdown: local, gpu: "unneeded" };
-  const { SCANNED_PAGE } = await import("./pdf-local.js");
+  const { SCANNED_PAGE, NEEDS_GPU } = await import("./pdf-local.js");
   const pages = splitPages(local);
   const all = [...pages.keys()];
-  const scanned = all.filter((n) => pages.get(n).endsWith(SCANNED_PAGE));
+  // Pages the browser could not read (scans) or could only guess the layout of (columns).
+  const scanned = all.filter((n) => pages.get(n).endsWith(SCANNED_PAGE) || pages.get(n).endsWith(NEEDS_GPU));
   // Best quality redoes every page, unless that is over the GPU limit: then only the scans.
   const best = $("best").checked && all.length <= GPU_MAX_PAGES;
   const target = best ? all : scanned;
@@ -232,7 +233,7 @@ async function run() {
     const onDraft = (draft) => {
       result.raw = draft;
       if (!state.results.includes(result)) state.results.push(result);
-      item.info = `draft ready · GPU ${$("best").checked ? "redoing every page" : "reading scanned pages"}…`; renderFiles();
+      item.info = `draft ready · GPU ${$("best").checked ? "redoing every page" : "reading scanned or multi-column pages"}…`; renderFiles();
       showResults();
     };
     try {
@@ -256,9 +257,10 @@ async function run() {
   const notes = [];
   const n = (k) => `${k} PDF${k > 1 ? "s" : ""}`;
   if (failed) notes.push(`${failed} file${failed > 1 ? "s" : ""} couldn't be converted.`);
-  if (missed.offline) notes.push(`${n(missed.offline)} had scanned pages left empty: the GPU server is resting${$("local-only").checked ? " (or Browser only is on)" : ""}. Try again later.`);
-  if (missed.too_many) notes.push(`${n(missed.too_many)} had more than ${GPU_MAX_PAGES} scanned pages, over the GPU limit; those pages are empty.`);
-  if (missed.failed) notes.push(`The GPU server couldn't finish ${n(missed.failed)}; scanned pages are empty.`);
+  const why = "scanned pages are empty, multi-column pages may be out of order";
+  if (missed.offline) notes.push(`${n(missed.offline)} had pages that need the GPU, which is resting${$("local-only").checked ? " (or Browser only is on)" : ""}: ${why}. Try again later.`);
+  if (missed.too_many) notes.push(`${n(missed.too_many)} had more than ${GPU_MAX_PAGES} pages that need the GPU (over its limit): ${why}.`);
+  if (missed.failed) notes.push(`The GPU server couldn't finish ${n(missed.failed)}: ${why}.`);
   setMessage(notes.join(" "), failed > 0);
 }
 $("run").addEventListener("click", run);

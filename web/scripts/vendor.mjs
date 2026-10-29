@@ -1,6 +1,6 @@
 // Copies third-party browser libraries into web/vendor so the site serves
 // everything from its own origin (no external CDNs — they are slow or blocked in mainland China).
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, cpSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,8 +11,19 @@ const files = {
   "node_modules/jszip/dist/jszip.min.js": "vendor/jszip.min.js",
 };
 
+// pdf.js data it fetches on demand: CMaps (without them, PDFs whose CJK fonts use predefined
+// encodings come out with every Chinese/Japanese/Korean character missing) and standard fonts.
+const dirs = {
+  "node_modules/pdfjs-dist/cmaps": "vendor/cmaps",
+  "node_modules/pdfjs-dist/standard_fonts": "vendor/standard_fonts",
+};
+
 mkdirSync(join(root, "vendor"), { recursive: true });
 for (const [src, dst] of Object.entries(files)) {
   copyFileSync(join(root, src), join(root, dst));
   console.log(`vendored ${dst}`);
+}
+for (const [src, dst] of Object.entries(dirs)) {
+  cpSync(join(root, src), join(root, dst), { recursive: true });
+  console.log(`vendored ${dst}/`);
 }
