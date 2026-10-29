@@ -22,7 +22,6 @@
   --warn: #f2b45a;
   --danger: #f59a8a;
   --fur: #c98a4b;
-  --nose: #5a3a1e;
   --sans: "Geist", system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "PingFang SC", "Microsoft YaHei", sans-serif;
   --mono: "Geist Mono", ui-monospace, Menlo, Consolas, monospace;
   --header: 56px;
@@ -47,7 +46,6 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .top { height: var(--header); display: flex; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--line); background: var(--bg); position: sticky; top: 0; z-index: 5; }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
 .logo { width: 30px; height: 30px; }
-.logo-face { fill: var(--fur); } .logo-eye { fill: var(--bg); } .logo-nose { fill: var(--nose); } .logo-tooth { fill: #fff; }
 .wordmark { font-weight: 700; font-size: 17px; letter-spacing: -0.03em; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; }
 .nav a { text-decoration: none; }
@@ -183,10 +181,11 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 
 /* small working beaver, bottom of the panel */
 .working { display: flex; align-items: center; gap: 12px; padding: 10px 24px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-2); }
-.mini-beaver { width: 30px; height: 30px; flex: none; }
-.mini-beaver .teeth { transform-origin: 16px 21px; animation: gnaw 0.45s ease-in-out infinite alternate; }
-@keyframes gnaw { from { transform: translateY(0); } to { transform: translateY(1.5px) scaleY(0.8); } }
-@media (prefers-reduced-motion: reduce) { .mini-beaver .teeth { animation: none; } }
+/* pixel beaver: drawn on an 89x56 grid, scaled up with hard pixel edges */
+.mini-beaver, .empty-beaver { display: block; flex: none; }
+.mini-beaver img, .empty-beaver img { display: block; height: auto; image-rendering: pixelated; }
+.mini-beaver img { width: 89px; margin: -10px 0 -8px; }
+.empty-beaver img { width: 178px; margin: 0 auto 18px; }
 .working-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* dock */
