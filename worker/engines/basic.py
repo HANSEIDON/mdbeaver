@@ -22,7 +22,7 @@ def _clean(text: str) -> str:
 
 
 def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None,
-            max_pages: int | None = None) -> str:
+            max_pages: int | None = None, on_progress=None) -> str:
     if kind != "pdf":
         raise ValueError("unsupported_kind")
     pdf = pdfium.PdfDocument(str(path))

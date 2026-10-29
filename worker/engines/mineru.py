@@ -10,6 +10,7 @@ MinerU's licence requires services built on it to say so publicly (attribution).
 """
 
 import base64
+import io
 import os
 import time
 from pathlib import Path
@@ -24,7 +25,8 @@ TIERS = {"fast": "standard", "precise": "advanced"}
 # minutes per job. Larger files still convert in the browser. The gateway may raise the limit per
 # job (friend codes); this is the default when it does not say.
 MAX_PAGES = int(os.environ.get("MDB_MAX_GPU_PAGES", 50))
-WAIT_SECONDS = 900  # at least this long; long jobs get 6 s a page
+WAIT_SECONDS = 900  # per MinerU call; at least this long, 6 s a page beyond that
+CHUNK = 100  # pages per MinerU call: long documents go in pieces, with progress after each
 SKIP_BLOCKS = {"header", "footer", "page_number"}
 
 
@@ -73,45 +75,71 @@ def _result(client: httpx.Client, resp: httpx.Response, wait: float) -> dict:
     return body
 
 
-def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None,
-            max_pages: int | None = None) -> str:
-    if kind != "pdf":
-        raise ValueError("unsupported_kind")
-    pdf = pdfium.PdfDocument(str(path))
-    try:
-        total = len(pdf)
-    finally:
-        pdf.close()
-    pages = sorted({p for p in pages if 0 < p <= total}) if pages else None
-    count = len(pages or range(total))
-    if count > (max_pages or MAX_PAGES):
-        raise ValueError("too_many_pages")
-    wait = max(WAIT_SECONDS, count * 6)
-    source = {"source": {"type": "inline", "name": f"input.{kind}",
-                         "data": base64.b64encode(path.read_bytes()).decode()}}
-    if pages:
-        source["page_range"] = ",".join(map(str, pages))  # MinerU keeps original page numbers
+def _parse(client: httpx.Client, data: bytes, mode: str, wait: float) -> list[dict]:
+    """One MinerU call on a whole (small) PDF; returns its structured pages."""
     request = {
-        "files": [source],
+        "files": [{"source": {"type": "inline", "name": "input.pdf", "data": base64.b64encode(data).decode()}}],
         "tier": TIERS.get(mode, "standard"),
         "output_formats": ["structured_content"],
     }
-    with httpx.Client(base_url=API, timeout=httpx.Timeout(wait, connect=10)) as client:
-        try:
-            resp = client.post("/v1/file_parse", json=request)
-        except httpx.ConnectError:
-            raise ValueError("engine_offline") from None
-        body = _result(client, resp, wait)
-        file = body["files"][0]
-        try:
-            if file.get("status") not in ("completed", None) or file.get("error"):
-                raise ValueError("engine_failed")
-            pages = file["content"]["structured_content"]["pages"]
-        finally:
-            # The server keeps the input and every output as files; none may outlive the job
-            # (privacy). The server's retention window is only a backstop.
-            outputs = [ref["file_id"] for ref in (file.get("output_files") or {}).values() if ref]
-            for file_id in filter(None, [file.get("file_id"), *outputs]):
-                client.delete(f"/v1/files/{file_id}")
-    parts = [f"<!-- page {p['page_idx'] + 1} -->\n\n{_page_markdown(p)}" for p in pages]
+    try:
+        resp = client.post("/v1/file_parse", json=request, timeout=httpx.Timeout(wait, connect=10))
+    except httpx.ConnectError:
+        raise ValueError("engine_offline") from None
+    body = _result(client, resp, wait)
+    file = body["files"][0]
+    try:
+        if file.get("status") not in ("completed", None) or file.get("error"):
+            raise ValueError("engine_failed")
+        return file["content"]["structured_content"]["pages"]
+    finally:
+        # The server keeps the input and every output as files; none may outlive the job
+        # (privacy). The server's retention window is only a backstop.
+        outputs = [ref["file_id"] for ref in (file.get("output_files") or {}).values() if ref]
+        for file_id in filter(None, [file.get("file_id"), *outputs]):
+            client.delete(f"/v1/files/{file_id}")
+
+
+def _subset(src: pdfium.PdfDocument, pages: list[int]) -> bytes:
+    """A new PDF holding only these (1-based) pages, so MinerU never gets the whole file."""
+    out = pdfium.PdfDocument.new()
+    try:
+        out.import_pages(src, [p - 1 for p in pages])
+        buf = io.BytesIO()
+        out.save(buf)
+        return buf.getvalue()
+    finally:
+        out.close()
+
+
+def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None,
+            max_pages: int | None = None, on_progress=None) -> str:
+    """Long documents go through MinerU CHUNK pages at a time: each chunk is its own small PDF
+    (retried once if it fails), and on_progress(done, total) is called after each one."""
+    if kind != "pdf":
+        raise ValueError("unsupported_kind")
+    src = pdfium.PdfDocument(str(path))
+    try:
+        total = len(src)
+        wanted = sorted({p for p in pages if 0 < p <= total}) if pages else list(range(1, total + 1))
+        if len(wanted) > (max_pages or MAX_PAGES):
+            raise ValueError("too_many_pages")
+        parts = []
+        with httpx.Client(base_url=API) as client:
+            for start in range(0, len(wanted), CHUNK):
+                chunk = wanted[start:start + CHUNK]
+                data = path.read_bytes() if len(chunk) == total else _subset(src, chunk)
+                for attempt in (1, 2):
+                    try:
+                        result = _parse(client, data, mode, max(WAIT_SECONDS, len(chunk) * 6))
+                        break
+                    except ValueError as exc:
+                        if attempt == 2 or str(exc) == "engine_offline":
+                            raise
+                # Chunk page i is original page chunk[i]: markers keep the document's numbering.
+                parts += [f"<!-- page {chunk[p['page_idx']]} -->\n\n{_page_markdown(p)}" for p in result]
+                if on_progress:
+                    on_progress(start + len(chunk), len(wanted))
+    finally:
+        src.close()
     return "\n\n".join(parts) + "\n"

@@ -42,6 +42,9 @@ sudo systemctl daemon-reload
 sudo systemctl enable mdbeaver-gateway >/dev/null 2>&1
 sudo systemctl restart mdbeaver-gateway
 
+# Coupon management command (coupons live in /var/lib/mdbeaver/coupons.json)
+sudo install -m 755 "$REL/deploy/mdb-coupons" /usr/local/bin/mdb-coupons
+
 # Nginx
 sudo cp "$REL/deploy/nginx-mdbeaver.conf" /etc/nginx/sites-available/mdbeaver
 sudo ln -sf /etc/nginx/sites-available/mdbeaver /etc/nginx/sites-enabled/mdbeaver

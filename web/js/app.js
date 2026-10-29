@@ -12,16 +12,18 @@ const MODE_HELP = {
 };
 // doneFor: the inputs of the last complete run; Convert stays off until files or options change,
 // so a stray click does not convert (and upload) everything again. abort: the running run's stop.
-// maxPages: GPU pages per file (the gateway's limit, or a friend code's); friend: that code.
-const state = { items: [], workerOnline: false, maxMb: 50, maxPages: 50, friend: "", busy: false, results: [], md: "", doneFor: null, abort: null };
+// maxMb / maxPages: upload size and GPU pages per file (the gateway's, or the coupon's).
+const state = { items: [], workerOnline: false, maxMb: 50, maxPages: 50, coupon: null, busy: false, results: [], md: "", doneFor: null, abort: null };
 
 // --- worker status -----------------------------------------------------
 async function refreshStatus() {
   try {
     const s = await (await fetch("/api/status", { cache: "no-store" })).json();
     state.workerOnline = !!s.worker_online;
-    state.maxMb = s.max_upload_mb || state.maxMb;
-    if (!state.friend) state.maxPages = s.max_gpu_pages || state.maxPages;
+    if (!state.coupon) {
+      state.maxMb = s.max_upload_mb || state.maxMb;
+      state.maxPages = s.max_gpu_pages || state.maxPages;
+    }
   } catch {
     state.workerOnline = false;
   }
@@ -67,50 +69,67 @@ function renderMode() {
 }
 for (const r of document.querySelectorAll('input[name="mode"]')) r.addEventListener("change", () => { renderMode(); renderRoute(); renderRun(); });
 renderMode();
-// --- friend code: the owner hands these out; it raises the GPU page limit -------------------
-const store = {
-  get: () => { try { return localStorage.getItem("mdb-friend") || ""; } catch { return ""; } },
-  set: (v) => { try { v ? localStorage.setItem("mdb-friend", v) : localStorage.removeItem("mdb-friend"); } catch {} },
+// --- coupons: codes the owner hands out; they raise the GPU page and upload limits per file.
+// Some never run out, some can be used a set number of times or until a date.
+const saved = {
+  get: () => { try { return localStorage.getItem("mdb-coupon") || ""; } catch { return ""; } },
+  set: (v) => { try { v ? localStorage.setItem("mdb-coupon", v) : localStorage.removeItem("mdb-coupon"); } catch {} },
 };
 
-function renderFriend(message = "") {
-  $("friend-form").hidden = !!state.friend;
-  $("friend-on").hidden = !state.friend;
-  $("friend-text").textContent = `Friend code on · GPU up to ${state.maxPages} pages per file`;
-  $("friend-msg").hidden = !message;
-  $("friend-msg").textContent = message;
-  renderMode();
-}
-
-async function applyFriend(code, quiet = false) {
-  let r;
-  try { r = await fetch("/api/friend", { method: "POST", headers: { "X-Friend-Code": code } }); }
-  catch { if (!quiet) renderFriend("Couldn't reach the server. Try again."); return; }
-  if (r.ok) {
-    state.friend = code;
-    state.maxPages = (await r.json()).max_gpu_pages;
-    store.set(code);
-    renderFriend();
-  } else {
-    store.set("");
-    if (!quiet) renderFriend(r.status === 429 ? "Too many tries. Wait a while and try again." : "That code doesn't work.");
+function renderCoupon(message = "") {
+  const c = state.coupon;
+  $("coupon-form").hidden = !!c;
+  $("coupon-on").hidden = !c;
+  if (c) {
+    const uses = c.uses_left === null ? "" : ` · ${count(c.uses_left, "use")} left`;
+    $("coupon-text").textContent = `Coupon on · GPU up to ${c.max_gpu_pages} pages, ${c.max_upload_mb} MB per file${uses}${c.expires ? ` · until ${c.expires}` : ""}`;
   }
+  $("coupon-msg").hidden = !message;
+  $("coupon-msg").textContent = message;
+  renderMode();
+  renderRoute();
 }
 
-$("friend-form").addEventListener("submit", (e) => {
+const COUPON_ERRORS = {
+  403: "That coupon doesn't exist.",
+  429: "Too many tries. Wait a while and try again.",
+  expired: "That coupon has expired.",
+  used_up: "That coupon has been used up.",
+};
+
+function dropCoupon(message = "") {
+  state.coupon = null;
+  saved.set("");
+  renderCoupon(message);
+  refreshStatus(); // back to the normal limits
+}
+
+// quiet: checking a saved coupon on load, so a dead one just disappears.
+async function applyCoupon(code, quiet = false) {
+  let r;
+  try { r = await fetch("/api/coupon", { method: "POST", headers: { "X-Coupon": code } }); }
+  catch { if (!quiet) renderCoupon("Couldn't reach the server. Try again."); return; }
+  if (r.ok) {
+    state.coupon = { code, ...(await r.json()) };
+    state.maxPages = state.coupon.max_gpu_pages;
+    state.maxMb = state.coupon.max_upload_mb;
+    saved.set(code);
+    renderCoupon();
+    return;
+  }
+  const detail = r.status === 410 ? (await r.json().catch(() => ({}))).detail : r.status;
+  const wasOn = !!state.coupon;
+  if (wasOn || quiet) dropCoupon(wasOn ? `${COUPON_ERRORS[detail] || "That coupon stopped working."} Back to the normal limits.` : "");
+  else renderCoupon(COUPON_ERRORS[detail] || "That coupon doesn't work.");
+}
+
+$("coupon-form").addEventListener("submit", (e) => {
   e.preventDefault();
-  const code = $("friend-code").value.trim();
-  if (code) applyFriend(code);
+  const code = $("coupon-code").value.trim();
+  if (code) applyCoupon(code);
 });
-$("friend-off").addEventListener("click", () => {
-  state.friend = "";
-  state.maxPages = 50;
-  store.set("");
-  $("friend-code").value = "";
-  renderFriend();
-  refreshStatus();
-});
-if (store.get()) applyFriend(store.get(), true); // a code saved earlier: check it is still valid
+$("coupon-off").addEventListener("click", () => { $("coupon-code").value = ""; dropCoupon(); });
+if (saved.get()) applyCoupon(saved.get(), true); // a coupon saved earlier: check it still works
 
 // Output options only re-render the text; nothing is converted again.
 for (const el of document.querySelectorAll(".output-opt")) el.addEventListener("change", () => { if (state.results.length) renderOutput(); });
@@ -239,7 +258,8 @@ async function convertServer(item, label, mode, pages, pageCount, signal) {
   form.append("file", item.file);
   form.append("mode", mode);
   if (pages) form.append("pages", pages.join(","));
-  const headers = state.friend ? { "X-Friend-Code": state.friend } : {};
+  const coupon = state.coupon?.code;
+  const headers = coupon ? { "X-Coupon": coupon } : {};
   const r = await fetch("/api/jobs", { method: "POST", body: form, headers, signal });
   if (!r.ok) {
     const err = new Error((await r.json().catch(() => ({}))).detail || `http_${r.status}`);
@@ -256,10 +276,15 @@ async function convertServer(item, label, mode, pages, pageCount, signal) {
     if (s.status === "queued") progress(`${label} · in line for the GPU, #${s.position}`, item, BROWSER_SHARE, `in line #${s.position}`);
     else if (s.status === "running") {
       started ??= Date.now();
-      progress(`Reading ${label} on the GPU`, item, gpuEstimate(started, pageCount, mode));
+      // Long jobs run in chunks and report how far they are; until then, estimate.
+      const real = s.progress == null ? 0 : BROWSER_SHARE + (0.97 - BROWSER_SHARE) * s.progress;
+      const done = s.progress == null ? "" : ` · ${Math.round(s.progress * 100)}%`;
+      progress(`Reading ${label} on the GPU${done}`, item, Math.max(real, gpuEstimate(started, pageCount, mode)));
     }
     else if (s.status === "done") {
       fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {});
+      // A limited coupon just lost a use: show what is left (or drop it when none is).
+      if (coupon && state.coupon?.code === coupon && state.coupon.uses_left !== null) applyCoupon(coupon);
       return s.markdown;
     } else {
       // Server-side failures (worker went offline, too many pages, engine error) fall back to the browser.

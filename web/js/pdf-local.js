@@ -4,7 +4,7 @@ import * as pdfjs from "/vendor/pdf.min.mjs";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/vendor/pdf.worker.min.mjs";
 
-const MAX_PAGES = 500;
+const MAX_PAGES = 2000;
 // Body of a page with no (usable) text layer; app.js looks for it to send those pages to the GPU.
 export const SCANNED_PAGE = "_(no text layer — scanned page, needs OCR)_";
 // Appended to pages that have text but a layout the browser can only guess (columns, big tables);

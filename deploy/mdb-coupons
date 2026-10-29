@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Manage coupons on the server (installed as /usr/local/bin/mdb-coupons by remote-setup.sh):
+#   mdb-coupons add --name friends --pages 1000 --upload 200
+#   mdb-coupons add --name launch --uses 1 --count 20 --expires 2026-12-31
+#   mdb-coupons list
+#   mdb-coupons remove --name launch
+# Runs as the service user so the coupons file keeps its owner. Details: gateway/app/coupons.py
+set -euo pipefail
+cd /opt/mdbeaver/gateway
+exec sudo -u mdbeaver env MDB_UPLOAD_DIR=/var/lib/mdbeaver/uploads MDB_COUPONS_FILE=/var/lib/mdbeaver/coupons.json \
+  /opt/mdbeaver/venv/bin/python -m app.coupons "$@"

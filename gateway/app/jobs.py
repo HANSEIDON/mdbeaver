@@ -24,8 +24,9 @@ class Job:
     path: Path
     ip: str
     pages: str = ""  # "1,4,5": convert only these pages (the browser already has the rest); "" = all
-    max_pages: int = 50  # GPU page limit for this job; higher with a friend code
-    friend: str = ""  # name of the friend code used, for the log
+    max_pages: int = 50  # GPU page limit for this job; higher with a coupon
+    coupon: str = ""  # coupon code that paid for this job: given back if the job does not finish
+    progress: float | None = None  # 0..1, reported by the worker for long jobs
     created: float = field(default_factory=time.time)
     status: str = QUEUED
     started: float | None = None
@@ -39,8 +40,9 @@ class Job:
 
 
 class JobStore:
-    def __init__(self, settings):
+    def __init__(self, settings, give_back=None):
         self.s = settings
+        self.give_back = give_back  # called with a coupon code when its job fails or is withdrawn
         self.jobs: dict[str, Job] = {}
         self.ip_hits: dict[str, deque] = {}
         self.worker_last_seen = 0.0
@@ -82,7 +84,14 @@ class JobStore:
     def remove(self, job_id: str) -> None:
         job = self.jobs.pop(job_id, None)
         if job:
+            if job.status in (QUEUED, RUNNING):  # withdrawn before it finished
+                self._refund(job)
             job.path.unlink(missing_ok=True)
+
+    def _refund(self, job: Job) -> None:
+        if job.coupon and self.give_back:
+            self.give_back(job.coupon)
+        job.coupon = ""
 
     # --- worker side ---------------------------------------------------
     async def claim(self, wait_sec: float) -> Job | None:
@@ -104,12 +113,14 @@ class JobStore:
                     return None
 
     def timeout(self, job: Job) -> float:
-        # Friend jobs may run many more pages, so they get proportionally longer.
+        # Coupon jobs may run many more pages, so they get proportionally longer.
         return self.s.job_timeout_sec * max(1.0, job.max_pages / self.s.max_gpu_pages)
 
     def finish(self, job: Job, result: str | None = None, error: str | None = None) -> None:
         job.status = FAILED if error else DONE
         job.result, job.error, job.finished = result, error, time.time()
+        if error:
+            self._refund(job)
         job.path.unlink(missing_ok=True)
 
     # --- housekeeping --------------------------------------------------

@@ -71,8 +71,15 @@ def process(client: httpx.Client, engine, job: dict) -> None:
         # The browser sends only the pages it could not read itself ("1,4,5"); empty means all.
         pages = [int(p) for p in job.get("pages", "").split(",") if p] or None
         try:
-            # The gateway sets the page limit per job (higher for friend codes).
-            markdown = engine.convert(path, job["kind"], job["mode"], pages, job.get("max_pages"))
+            # The gateway sets the page limit per job (higher with a coupon). Long jobs report
+            # progress after each chunk so the page can show how far along they are.
+            def progress(done: int, total: int) -> None:
+                try:
+                    client.post(f"/api/worker/jobs/{job_id}/progress", json={"done": done, "total": total})
+                except httpx.HTTPError:
+                    pass  # progress is a nicety; never fail the job over it
+
+            markdown = engine.convert(path, job["kind"], job["mode"], pages, job.get("max_pages"), progress)
         except Exception as exc:  # report a short code, never document content
             code = str(exc) if isinstance(exc, ValueError) else type(exc).__name__
             log.warning("job %s failed: %s", job_id, code)

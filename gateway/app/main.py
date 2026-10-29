@@ -11,15 +11,17 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .config import load_settings
-from .jobs import DONE, FAILED, Job, JobStore, new_job_id
+from .coupons import Coupons
+from .jobs import DONE, FAILED, RUNNING, Job, JobStore, new_job_id
 
 log = logging.getLogger("mdbeaver.gateway")
 settings = load_settings()
-store = JobStore(settings)
+coupons = Coupons(settings.coupons_file)
+store = JobStore(settings, give_back=coupons.give_back)
 
 MAX_MARKDOWN_BYTES = 20 * 1024 * 1024
 ALLOWED_MODES = {"fast", "precise"}
-PAGES = re.compile(r"^\d{1,4}(,\d{1,4}){0,499}$")  # page list from the browser: "1,4,5"
+PAGES = re.compile(r"^\d{1,4}(,\d{1,4}){0,1999}$")  # page list from the browser: "1,4,5"
 
 
 async def _sweeper():
@@ -46,23 +48,11 @@ def client_ip(request: Request) -> str:
     return request.headers.get("x-real-ip") or (request.client.host if request.client else "unknown")
 
 
-def friend_name(code: str) -> str | None:
-    """Name of the friend code sent in X-Friend-Code, if it is one of ours."""
-    code = code.strip()
-    if not code:
-        return None
-    match = None
-    for name, known in settings.friend_codes:  # compare against every code: no early exit
-        if secrets.compare_digest(code.encode(), known.encode()):
-            match = name
-    return match
-
-
 _bad_codes: dict[str, deque] = {}
 
 
 def code_attempt_allowed(ip: str) -> bool:
-    """At most 10 wrong friend codes per IP per hour."""
+    """At most 10 wrong coupon codes per IP per hour."""
     now = time.time()
     misses = _bad_codes.setdefault(ip, deque())
     while misses and now - misses[0] > 3600:
@@ -87,16 +77,19 @@ def status():
     }
 
 
-@app.post("/api/friend")
-def check_friend(request: Request):
-    """Lets the page check a friend code before it is used; answers with the page limit it unlocks."""
+@app.post("/api/coupon")
+def check_coupon(request: Request):
+    """Lets the page check a coupon (sent in X-Coupon) before using it: its limits and uses left."""
     ip = client_ip(request)
     if not code_attempt_allowed(ip):
         raise HTTPException(429, "too_many_attempts")
-    if not friend_name(request.headers.get("x-friend-code", "")):
+    c = coupons.find(request.headers.get("x-coupon", ""))
+    if not c:
         _bad_codes[ip].append(time.time())
-        raise HTTPException(403, "unknown_code")
-    return {"max_gpu_pages": settings.friend_max_pages}
+        raise HTTPException(403, "unknown_coupon")
+    if (state := Coupons.state(c)) != "ok":
+        raise HTTPException(410, state)
+    return Coupons.public(c)
 
 
 @app.post("/api/jobs", status_code=202)
@@ -119,6 +112,10 @@ async def create_job(request: Request, file: UploadFile = File(...), mode: str =
     if kind is None:
         raise HTTPException(415, "unsupported_type")
 
+    # A valid coupon raises this file's limits and is used once; an invalid one is ignored.
+    code = request.headers.get("x-coupon", "")
+    coupon = coupons.take(code) if code else None
+    max_bytes = coupon["max_upload_mb"] * 1_048_576 if coupon else settings.max_upload_bytes
     job_id = new_job_id()
     path = settings.upload_dir / f"{job_id}.{kind}"
     size = len(head)
@@ -127,19 +124,20 @@ async def create_job(request: Request, file: UploadFile = File(...), mode: str =
             out.write(head)
             while chunk := await file.read(1024 * 1024):
                 size += len(chunk)
-                if size > settings.max_upload_bytes:
+                if size > max_bytes:
                     raise HTTPException(413, "too_large")
                 out.write(chunk)
     except BaseException:
         path.unlink(missing_ok=True)
+        if coupon:
+            coupons.give_back(code)
         raise
 
-    friend = friend_name(request.headers.get("x-friend-code", "")) or ""
-    max_pages = settings.friend_max_pages if friend else settings.max_gpu_pages
     job = Job(id=job_id, kind=kind, mode=mode, size=size, path=path, ip=ip, pages=pages,
-              max_pages=max_pages, friend=friend)
+              max_pages=coupon["max_pages"] if coupon else settings.max_gpu_pages,
+              coupon=code if coupon else "")
     await store.add(job)
-    log.info("job %s queued kind=%s size=%d%s", job_id, kind, size, f" friend={friend}" if friend else "")
+    log.info("job %s queued kind=%s size=%d%s", job_id, kind, size, f" coupon={coupon['name']}" if coupon else "")
     return {"id": job_id, "position": store.position(job)}
 
 
@@ -149,6 +147,8 @@ def get_job(job_id: str):
     if not job:
         raise HTTPException(404, "not_found")
     body = {"status": job.status, "position": store.position(job)}
+    if job.status == RUNNING and job.progress is not None:
+        body["progress"] = job.progress
     if job.status == DONE:
         body["markdown"] = job.result
     elif job.status == FAILED:
@@ -178,6 +178,11 @@ class FailIn(BaseModel):
     error: str = Field(max_length=200)
 
 
+class ProgressIn(BaseModel):
+    done: int = Field(ge=0)
+    total: int = Field(gt=0)
+
+
 def running_job(job_id: str) -> Job:
     job = store.jobs.get(job_id)
     if not job or job.status != "running":
@@ -203,6 +208,12 @@ def worker_file(job_id: str):
 def worker_result(job_id: str, body: ResultIn):
     store.finish(running_job(job_id), result=body.markdown)
     log.info("job %s done", job_id)
+    return {"ok": True}
+
+
+@app.post("/api/worker/jobs/{job_id}/progress", dependencies=[Depends(require_worker)])
+def worker_progress(job_id: str, body: ProgressIn):
+    running_job(job_id).progress = min(1.0, body.done / body.total)
     return {"ok": True}
 
 

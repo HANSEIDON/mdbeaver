@@ -51,15 +51,17 @@ MDB_ENGINE=basic
 
 Then `.venv/Scripts/python worker.py`. The site's status dot turns green while the worker is connected.
 
-Engines live in `worker/engines/` and share `convert(path, kind, mode, pages, max_pages) -> markdown`. `basic` reads the PDF text layer on CPU. `mineru` (GPU, chosen in `bench/results/engines-2026-10-29.md`) calls the MinerU API, which runs in WSL: start it with `wsl -d Ubuntu-24.04 -- bash worker/mineru-server.sh` (models load in ~1–3 min), then set `MDB_ENGINE=mineru`. MinerU's licence requires the attribution line (Credits on `web/about.html`) to be live before the site serves MinerU output.
+Engines live in `worker/engines/` and share `convert(path, kind, mode, pages, max_pages, on_progress) -> markdown`. `basic` reads the PDF text layer on CPU. `mineru` (GPU, chosen in `bench/results/engines-2026-10-29.md`) calls the MinerU API, which runs in WSL: start it with `wsl -d Ubuntu-24.04 -- bash worker/mineru-server.sh` (models load in ~1–3 min), then set `MDB_ENGINE=mineru`. MinerU's licence requires the attribution line (Credits on `web/about.html`) to be live before the site serves MinerU output.
 
-### Friend codes
+### Coupons
 
-A GPU job is limited to `MDB_MAX_GPU_PAGES` (50) pages. To let friends send longer PDFs, add codes to the gateway's env file and restart it:
+A file normally gets up to `MDB_MAX_GPU_PAGES` (50) GPU pages and 50 MB. A coupon raises that for the person who has it: paste it under Settings → Coupon (it is remembered in their browser). Coupons live in `/var/lib/mdbeaver/coupons.json` on the server; manage them there with `mdb-coupons`:
 
 ```
-MDB_FRIEND_CODES=friends:<code>,alice:<another code>
-MDB_FRIEND_MAX_PAGES=300
+mdb-coupons add --name friends --pages 1000 --upload 200        # unlimited uses
+mdb-coupons add --name launch --uses 1 --count 20 --expires 2026-12-31   # 20 one-time coupons
+mdb-coupons list
+mdb-coupons remove --name launch
 ```
 
-They paste the code under Settings → Friend code; it is remembered in their browser. Remove a name from the list to revoke it.
+One use is one file sent to the GPU; it is given back if that job fails or is withdrawn. Long documents run on the GPU 100 pages at a time and the page shows real progress.
