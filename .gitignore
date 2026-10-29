@@ -42,3 +42,7 @@ web/vendor/
 Thumbs.db
 .vscode/
 .idea/
+
+# MinerU API runtime data (worker/mineru-server.sh keeps it in ~/mdb/mineru-data)
+blobs/
+.mineru-service.lock

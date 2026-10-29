@@ -108,6 +108,8 @@ code { font: 0.92em var(--mono); color: var(--ink-2); background: var(--surface-
 .route { margin: 0; font: 12px var(--mono); color: var(--ink-3); }
 .message { margin: 4px 0 0; font-size: 13px; color: var(--ink-2); }
 .message.error { color: var(--danger); }
+.credits { padding: 12px 16px 20px; text-align: center; font-size: 12px; color: var(--ink-3); }
+.credits a { color: inherit; }
 .bar { height: 3px; margin-top: 8px; background: var(--surface-3); border-radius: 99px; overflow: hidden; }
 #bar-fill { height: 100%; width: 0; background: var(--honey); transition: width 0.2s; }
 #bar-fill.indeterminate { width: 30%; animation: slide 1.2s ease-in-out infinite; }

@@ -6,7 +6,8 @@ Swap engines with MDB_ENGINE without touching the worker loop.
 from importlib import import_module
 
 ENGINES = {
-    "basic": "engines.basic",  # CPU text-layer extraction (placeholder until GPU engines land)
+    "basic": "engines.basic",  # CPU text-layer extraction, no OCR
+    "mineru": "engines.mineru",  # GPU: MinerU 4 API in WSL (worker/mineru-server.sh)
 }
 
 

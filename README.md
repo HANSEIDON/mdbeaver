@@ -47,4 +47,4 @@ MDB_ENGINE=basic
 
 Then `.venv/Scripts/python worker.py`. The site's status dot turns green while the worker is connected.
 
-Engines live in `worker/engines/` and share `convert(path, kind, mode) -> markdown`. `basic` reads the PDF text layer on CPU; GPU engines (PaddleOCR-VL, MinerU) plug in the same way.
+Engines live in `worker/engines/` and share `convert(path, kind, mode) -> markdown`. `basic` reads the PDF text layer on CPU. `mineru` (GPU, chosen in `bench/results/engines-2026-10-29.md`) calls the MinerU API, which runs in WSL: start it with `wsl -d Ubuntu-24.04 -- bash worker/mineru-server.sh` (models load in ~1–3 min), then set `MDB_ENGINE=mineru`. MinerU's licence requires the attribution line in `web/index.html` to be live before the site serves MinerU output.
