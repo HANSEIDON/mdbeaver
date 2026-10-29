@@ -46,7 +46,7 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 /* header */
 .top { height: var(--header); display: flex; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid var(--line); background: var(--bg); position: sticky; top: 0; z-index: 5; }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; }
-.logo { width: 26px; height: 26px; }
+.logo { width: 30px; height: 30px; }
 .logo-face { fill: var(--fur); } .logo-eye { fill: var(--bg); } .logo-nose { fill: var(--nose); } .logo-tooth { fill: #fff; }
 .wordmark { font-weight: 700; font-size: 17px; letter-spacing: -0.03em; }
 .nav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; }
