@@ -1,3 +1,4 @@
+import { renderMarkdown } from "./mdview.js";
 import { estimateTokens, merge, optimize } from "./output.js";
 
 const $ = (id) => document.getElementById(id);
@@ -11,7 +12,7 @@ const MODE_HELP = {
 };
 // doneFor: the inputs of the last complete run; Convert stays off until files or options change,
 // so a stray click does not convert (and upload) everything again. abort: the running run's stop.
-const state = { items: [], workerOnline: false, maxMb: 50, busy: false, results: [], doneFor: null, abort: null };
+const state = { items: [], workerOnline: false, maxMb: 50, busy: false, results: [], md: "", doneFor: null, abort: null };
 
 // --- worker status -----------------------------------------------------
 async function refreshStatus() {
@@ -229,10 +230,11 @@ function outputs() {
 function renderOutput() {
   const outs = outputs();
   const md = merge(outs);
-  $("output").value = md;
+  state.md = md;
+  const lines = renderMarkdown($("output"), md);
   $("result-name").textContent = outs.length === 1 ? mdName(outs[0].name) : `merged-${outs.length}-documents.md`;
-  const files = outs.length === 1 ? mdName(outs[0].name) : `${outs.length} files merged`;
-  $("result-stats").textContent = `${files} · ~${estimateTokens(md).toLocaleString()} tokens`;
+  const files = outs.length === 1 ? "" : ` · ${outs.length} files`;
+  $("result-stats").textContent = `~${estimateTokens(md).toLocaleString()} tokens · ${lines.toLocaleString()} lines${files}`;
   $("download-zip").hidden = outs.length < 2;
 }
 
@@ -327,14 +329,20 @@ function save(blob, name) {
 }
 
 $("copy").addEventListener("click", async () => {
-  try { await navigator.clipboard.writeText($("output").value); }
-  catch { $("output").select(); document.execCommand("copy"); }
+  try { await navigator.clipboard.writeText(state.md); }
+  catch {
+    const range = document.createRange();
+    range.selectNodeContents($("output"));
+    getSelection().removeAllRanges();
+    getSelection().addRange(range);
+    document.execCommand("copy");
+  }
   $("copy").textContent = "Copied";
   setTimeout(() => { $("copy").textContent = "Copy"; }, 1500);
 });
 
 $("download").addEventListener("click", () => {
-  save(new Blob([$("output").value], { type: "text/markdown;charset=utf-8" }), $("result-name").textContent);
+  save(new Blob([state.md],{ type: "text/markdown;charset=utf-8" }), $("result-name").textContent);
 });
 
 $("download-zip").addEventListener("click", async () => {

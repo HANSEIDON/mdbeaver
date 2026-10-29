@@ -80,17 +80,20 @@
           <p>Nothing here yet.</p>
           <small>Add files and press Convert.</small>
         </div>
-        <div id="result" class="result" hidden>
-          <div class="result-bar">
-            <p id="result-stats" class="result-stats"></p>
+        <div id="result" class="result editor" hidden>
+          <div class="editor-head">
+            <p class="editor-tab"><span class="md-mark" aria-hidden="true">M↓</span><span id="result-name"></span></p>
             <div class="actions">
               <button id="copy" class="btn primary">Copy</button>
               <button id="download" class="btn">.md</button>
               <button id="download-zip" class="btn" hidden>.zip</button>
             </div>
           </div>
-          <p id="result-name" class="sr"></p>
-          <textarea id="output" readonly spellcheck="false" aria-label="Markdown output"></textarea>
+          <pre id="output" class="code" tabindex="0" aria-label="Markdown output"></pre>
+          <div class="editor-foot">
+            <span id="result-stats"></span>
+            <span>Markdown · UTF-8</span>
+          </div>
         </div>
       </div>
 
