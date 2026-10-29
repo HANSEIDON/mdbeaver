@@ -9,6 +9,7 @@
   <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/styles.css">
+  <script src="/js/about.js" defer></script>
 </head>
 <body class="about-page">
   <header class="top">
@@ -30,7 +31,7 @@
       <p class="lead">I chew PDFs, Word files and slides into Markdown an AI can actually digest. I keep the headings, tables and formulas, and spit out the page numbers, running headers and other wood chips — so the same document costs fewer tokens.</p>
       <p class="lead">It's free. I work for sticks.</p>
       </div>
-      <img class="art art-wave" src="/about-wave.webp" alt="" width="360" height="293">
+      <img class="art art-hello" src="/about-hello.webp" alt="" width="520" height="565">
     </section>
 
     <section>
@@ -43,11 +44,14 @@
     </section>
 
     <section class="tokens">
-      <img class="art art-peek" src="/about-peek.webp" alt="" width="320" height="319" loading="lazy">
       <h2>Fewer tokens, nearly the same answers</h2>
       <p class="stat"><span class="stat-big">−46%</span><span class="stat-text">tokens compared with handing the AI your pages as images, at 94% vs 98% correct answers.</span></p>
 
       <figure class="chart" aria-labelledby="chart-title">
+        <img class="art chomp" src="/about-chomp.webp" alt="" width="340" height="266">
+        <span class="bites" aria-hidden="true"></span>
+        <svg class="crack" viewBox="0 0 220 120" aria-hidden="true"><path d="M206 2 L188 18 L194 30 L170 46 L176 58 L148 80 L152 94 L126 116"/><path d="M194 30 L214 52 L208 66"/><path d="M170 46 L150 40 L136 52 L118 48"/><path d="M148 80 L168 98 L164 112"/></svg>
+        <span class="crumbs" aria-hidden="true"></span>
         <figcaption id="chart-title" class="chart-title">Tokens the AI reads per question <span>(fewer is better)</span></figcaption>
         <div class="bars" role="list">
           <div class="bar-row" role="listitem" title="Page images: 3,848 tokens per question, 98% correct">
@@ -92,7 +96,7 @@
       <ul class="facts">
         <li>No accounts, no cookies, no analytics.</li>
         <li>Uploaded files are deleted as soon as they are converted; results are gone within 10 minutes.</li>
-        <li>Pages sent to the GPU travel over HTTPS through a server in Japan and are read on a computer in China.</li>
+        <li>Pages that need the GPU are sent over HTTPS and deleted once they are read.</li>
         <li>The web server keeps standard access logs (IP address, time, page) for 14 days.</li>
       </ul>
       <p class="fine">A full privacy policy and terms of use are on the way.</p>
