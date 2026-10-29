@@ -5,6 +5,8 @@ import * as pdfjs from "/vendor/pdf.min.mjs";
 pdfjs.GlobalWorkerOptions.workerSrc = "/vendor/pdf.worker.min.mjs";
 
 const MAX_PAGES = 500;
+// Body of a page with no text layer; app.js looks for it to send those pages to the GPU.
+export const SCANNED_PAGE = "_(no text layer — scanned page, needs OCR)_";
 
 function fontSize(item) {
   return Math.hypot(item.transform[2], item.transform[3]) || item.height || 0;
@@ -99,7 +101,7 @@ export async function pdfToMarkdown(file, onProgress, { keepHeaders = false } = 
   pages.forEach((lines, i) => {
     out.push(`<!-- page ${i + 1} -->`);
     if (!lines.length) {
-      out.push("_(no text layer — scanned page, needs OCR)_");
+      out.push(SCANNED_PAGE);
       return;
     }
     let para = [];

@@ -1,4 +1,7 @@
-"""Conversion engines share one interface: convert(path, kind, mode) -> markdown.
+"""Conversion engines share one interface: convert(path, kind, mode, pages) -> markdown.
+
+`pages` is a list of 1-based page numbers to convert, or None for all; every converted page
+starts with a `<!-- page N -->` marker carrying its number in the original document.
 
 Swap engines with MDB_ENGINE without touching the worker loop.
 """

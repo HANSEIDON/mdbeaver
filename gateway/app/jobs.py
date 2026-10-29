@@ -23,6 +23,7 @@ class Job:
     size: int
     path: Path
     ip: str
+    pages: str = ""  # "1,4,5": convert only these pages (the browser already has the rest); "" = all
     created: float = field(default_factory=time.time)
     status: str = QUEUED
     started: float | None = None

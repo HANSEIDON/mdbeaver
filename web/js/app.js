@@ -18,13 +18,17 @@ async function refreshStatus() {
   renderRoute();
 }
 
-const onServer = (item) => item.kind === "pdf" && state.workerOnline && !$("local-only").checked && item.file.size <= state.maxMb * 1048576;
+// Every file converts in the browser first. A PDF goes to the GPU only for pages the browser could
+// not read (scans), or for every page with "Best quality". Matches worker MDB_MAX_GPU_PAGES.
+const GPU_MAX_PAGES = 50;
+const canUseGpu = (item) => item.kind === "pdf" && state.workerOnline && !$("local-only").checked && item.file.size <= state.maxMb * 1048576;
 
 function renderRoute() {
   if (state.busy) return;
   if (!state.items.length) { $("route").textContent = "Free · add documents to start"; return; }
-  const server = state.items.some(onServer);
-  $("route").textContent = `Free · ${state.items.length} file${state.items.length > 1 ? "s" : ""} · ${server ? "PDFs on our GPU server, the rest in your browser" : "runs in your browser"}`;
+  const gpu = state.items.some(canUseGpu);
+  const where = !gpu ? "runs in your browser" : $("best").checked ? "PDFs on our GPU server, the rest in your browser" : "in your browser · scanned pages on our GPU";
+  $("route").textContent = `Free · ${state.items.length} file${state.items.length > 1 ? "s" : ""} · ${where}`;
 }
 
 // --- tabs and options ---------------------------------------------------
@@ -35,6 +39,7 @@ function showTab(name) {
 }
 document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
 $("local-only").addEventListener("change", renderRoute);
+$("best").addEventListener("change", renderRoute);
 $("keep-pages").addEventListener("change", () => { if (state.results.length) renderOutput(); });
 
 // --- file list ---------------------------------------------------------
@@ -113,11 +118,12 @@ async function convertLocal(item, label) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function convertServer(item, label) {
+async function convertServer(item, label, mode, pages) {
   progress(`${label} · uploading`);
   const form = new FormData();
   form.append("file", item.file);
-  form.append("mode", "fast");
+  form.append("mode", mode);
+  if (pages) form.append("pages", pages.join(","));
   const r = await fetch("/api/jobs", { method: "POST", body: form });
   if (!r.ok) {
     const err = new Error((await r.json().catch(() => ({}))).detail || `http_${r.status}`);
@@ -142,13 +148,45 @@ async function convertServer(item, label) {
   }
 }
 
-async function convert(item, label) {
-  if (!onServer(item)) return { markdown: await convertLocal(item, label), fellBack: false };
+// Split converter output on `<!-- page N -->` markers: Map(page number -> marker + body).
+function splitPages(markdown) {
+  const pages = new Map();
+  for (const chunk of markdown.split(/(?=^<!-- page \d+ -->$)/m)) {
+    const n = chunk.match(/^<!-- page (\d+) -->/)?.[1];
+    if (n) pages.set(Number(n), chunk.trimEnd());
+  }
+  return pages;
+}
+
+function replacePages(local, gpu) {
+  const pages = splitPages(local);
+  for (const [n, chunk] of splitPages(gpu)) pages.set(n, chunk);
+  return [...pages.entries()].sort((a, b) => a[0] - b[0]).map(([, c]) => c).join("\n\n") + "\n";
+}
+
+// Returns { markdown, gpu } where gpu is "unneeded", "done", or why scanned pages stayed empty:
+// "offline" (no worker / browser-only), "too_many" (over GPU_MAX_PAGES) or "failed".
+async function convert(item, label, onDraft) {
+  const local = await convertLocal(item, label);
+  if (item.kind !== "pdf") return { markdown: local, gpu: "unneeded" };
+  const { SCANNED_PAGE } = await import("./pdf-local.js");
+  const pages = splitPages(local);
+  const all = [...pages.keys()];
+  const scanned = all.filter((n) => pages.get(n).endsWith(SCANNED_PAGE));
+  // Best quality redoes every page, unless that is over the GPU limit: then only the scans.
+  const best = $("best").checked && all.length <= GPU_MAX_PAGES;
+  const target = best ? all : scanned;
+  const missed = (why) => ({ markdown: local, gpu: scanned.length ? why : "unneeded" });
+  if (!target.length) return { markdown: local, gpu: "unneeded" };
+  if (!canUseGpu(item)) return missed("offline");
+  if (target.length > GPU_MAX_PAGES) return missed("too_many");
+  onDraft(local);
   try {
-    return { markdown: await convertServer(item, label), fellBack: false };
+    const gpu = await convertServer(item, label, best ? "precise" : "fast", best ? null : target);
+    return { markdown: replacePages(local, gpu), gpu: "done" };
   } catch (e) {
     if (!e.fallback) throw e;
-    return { markdown: await convertLocal(item, label), fellBack: true };
+    return missed("failed");
   }
 }
 
@@ -174,17 +212,34 @@ async function run() {
   state.busy = true;
   state.results = [];
   setMessage("");
-  let failed = 0, fellBack = 0;
+  let failed = 0;
+  const missed = { offline: 0, too_many: 0, failed: 0 };
   for (const item of state.items) { item.status = ""; item.info = "waiting"; }
   renderFiles();
+
+  const showResults = () => {
+    renderOutput();
+    $("empty").hidden = true;
+    $("result").hidden = false;
+    showTab("results");
+  };
 
   for (const [i, item] of state.items.entries()) {
     const label = state.items.length > 1 ? `${i + 1}/${state.items.length} ${item.file.name}` : item.file.name;
     item.status = "busy"; item.info = "converting…"; renderFiles();
+    const result = { name: item.file.name, raw: "" };
+    // The browser draft is shown while the GPU redoes pages; its result then replaces the draft.
+    const onDraft = (draft) => {
+      result.raw = draft;
+      if (!state.results.includes(result)) state.results.push(result);
+      item.info = `draft ready · GPU ${$("best").checked ? "redoing every page" : "reading scanned pages"}…`; renderFiles();
+      showResults();
+    };
     try {
-      const { markdown, fellBack: fb } = await convert(item, label);
-      fellBack += fb ? 1 : 0;
-      state.results.push({ name: item.file.name, raw: markdown });
+      const { markdown, gpu } = await convert(item, label, onDraft);
+      if (gpu in missed) missed[gpu]++;
+      result.raw = markdown;
+      if (!state.results.includes(result)) state.results.push(result);
       const tokens = estimateTokens(optimize(markdown));
       item.status = "done"; item.info = `done · ~${tokens.toLocaleString()} tokens`;
     } catch (e) {
@@ -197,15 +252,13 @@ async function run() {
   state.busy = false;
   $("bar").hidden = true;
   renderFiles();
-  if (state.results.length) {
-    renderOutput();
-    $("empty").hidden = true;
-    $("result").hidden = false;
-    showTab("results");
-  }
+  if (state.results.length) showResults();
   const notes = [];
+  const n = (k) => `${k} PDF${k > 1 ? "s" : ""}`;
   if (failed) notes.push(`${failed} file${failed > 1 ? "s" : ""} couldn't be converted.`);
-  if (fellBack) notes.push("The GPU server couldn't take some PDFs, so they ran in your browser.");
+  if (missed.offline) notes.push(`${n(missed.offline)} had scanned pages left empty: the GPU server is resting${$("local-only").checked ? " (or Browser only is on)" : ""}. Try again later.`);
+  if (missed.too_many) notes.push(`${n(missed.too_many)} had more than ${GPU_MAX_PAGES} scanned pages, over the GPU limit; those pages are empty.`);
+  if (missed.failed) notes.push(`The GPU server couldn't finish ${n(missed.failed)}; scanned pages are empty.`);
   setMessage(notes.join(" "), failed > 0);
 }
 $("run").addEventListener("click", run);

@@ -66,18 +66,23 @@ def _result(client: httpx.Client, resp: httpx.Response) -> dict:
     return body
 
 
-def convert(path: Path, kind: str, mode: str) -> str:
+def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None) -> str:
     if kind != "pdf":
         raise ValueError("unsupported_kind")
     pdf = pdfium.PdfDocument(str(path))
     try:
-        if len(pdf) > MAX_PAGES:
-            raise ValueError("too_many_pages")
+        total = len(pdf)
     finally:
         pdf.close()
+    pages = sorted({p for p in pages if 0 < p <= total}) if pages else None
+    if len(pages or range(total)) > MAX_PAGES:
+        raise ValueError("too_many_pages")
+    source = {"source": {"type": "inline", "name": f"input.{kind}",
+                         "data": base64.b64encode(path.read_bytes()).decode()}}
+    if pages:
+        source["page_range"] = ",".join(map(str, pages))  # MinerU keeps original page numbers
     request = {
-        "files": [{"source": {"type": "inline", "name": f"input.{kind}",
-                              "data": base64.b64encode(path.read_bytes()).decode()}}],
+        "files": [source],
         "tier": TIERS.get(mode, "standard"),
         "output_formats": ["structured_content"],
     }

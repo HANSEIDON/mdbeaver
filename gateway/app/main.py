@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import secrets
 from contextlib import asynccontextmanager
 
@@ -16,6 +17,7 @@ store = JobStore(settings)
 
 MAX_MARKDOWN_BYTES = 20 * 1024 * 1024
 ALLOWED_MODES = {"fast", "precise"}
+PAGES = re.compile(r"^\d{1,4}(,\d{1,4}){0,499}$")  # page list from the browser: "1,4,5"
 
 
 async def _sweeper():
@@ -59,9 +61,12 @@ def status():
 
 
 @app.post("/api/jobs", status_code=202)
-async def create_job(request: Request, file: UploadFile = File(...), mode: str = Form("fast")):
+async def create_job(request: Request, file: UploadFile = File(...), mode: str = Form("fast"),
+                     pages: str = Form("")):
     if mode not in ALLOWED_MODES:
         raise HTTPException(400, "invalid_mode")
+    if pages and not PAGES.match(pages):
+        raise HTTPException(400, "invalid_pages")
     if not store.worker_online():
         raise HTTPException(503, "worker_offline")
     if store.queue_full():
@@ -90,7 +95,7 @@ async def create_job(request: Request, file: UploadFile = File(...), mode: str =
         path.unlink(missing_ok=True)
         raise
 
-    job = Job(id=job_id, kind=kind, mode=mode, size=size, path=path, ip=ip)
+    job = Job(id=job_id, kind=kind, mode=mode, size=size, path=path, ip=ip, pages=pages)
     await store.add(job)
     log.info("job %s queued kind=%s size=%d", job_id, kind, size)
     return {"id": job_id, "position": store.position(job)}
@@ -143,7 +148,7 @@ async def worker_claim():
     job = await store.claim(wait_sec=20)
     if not job:
         return Response(status_code=204)
-    return {"id": job.id, "kind": job.kind, "mode": job.mode, "size": job.size}
+    return {"id": job.id, "kind": job.kind, "mode": job.mode, "size": job.size, "pages": job.pages}
 
 
 @app.get("/api/worker/jobs/{job_id}/file", dependencies=[Depends(require_worker)])

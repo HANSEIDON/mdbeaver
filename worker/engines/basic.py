@@ -21,7 +21,7 @@ def _clean(text: str) -> str:
     return text.strip()
 
 
-def convert(path: Path, kind: str, mode: str) -> str:
+def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None) -> str:
     if kind != "pdf":
         raise ValueError("unsupported_kind")
     pdf = pdfium.PdfDocument(str(path))
@@ -29,7 +29,7 @@ def convert(path: Path, kind: str, mode: str) -> str:
         if len(pdf) > MAX_PAGES:
             raise ValueError("too_many_pages")
         parts = []
-        for i in range(len(pdf)):
+        for i in (p - 1 for p in pages if 0 < p <= len(pdf)) if pages else range(len(pdf)):
             page = pdf[i]
             textpage = page.get_textpage()
             text = _clean(textpage.get_text_range())

@@ -65,8 +65,10 @@ def process(client: httpx.Client, engine, job: dict) -> None:
             with path.open("wb") as out:
                 for chunk in resp.iter_bytes():
                     out.write(chunk)
+        # The browser sends only the pages it could not read itself ("1,4,5"); empty means all.
+        pages = [int(p) for p in job.get("pages", "").split(",") if p] or None
         try:
-            markdown = engine.convert(path, job["kind"], job["mode"])
+            markdown = engine.convert(path, job["kind"], job["mode"], pages)
         except Exception as exc:  # report a short code, never document content
             code = str(exc) if isinstance(exc, ValueError) else type(exc).__name__
             log.warning("job %s failed: %s", job_id, code)
