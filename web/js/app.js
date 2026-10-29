@@ -342,5 +342,9 @@ $("download-zip").addEventListener("click", async () => {
   save(await zip.generateAsync({ type: "blob" }), "mdbeaver-documents.zip");
 });
 
+// --- donate ------------------------------------------------------------
+$("donate-open").addEventListener("click", () => $("donate").showModal());
+$("donate").addEventListener("click", (e) => { if (e.target === $("donate")) $("donate").close(); }); // click outside
+
 refreshStatus();
 setInterval(refreshStatus, 15000);

@@ -2,6 +2,10 @@
 
 PDF / PPTX → AI-ready Markdown. Live at https://mdbeaver.com
 
+mdbeaver is free. If it saved you time, you can support it with WeChat:
+
+<img src="web/donate-wechat.jpg" width="200" alt="WeChat donation QR code">
+
 Design notes and decisions: [docs/DESIGN.md](docs/DESIGN.md)
 
 ## Layout
