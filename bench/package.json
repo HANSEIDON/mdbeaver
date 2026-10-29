@@ -1,0 +1,14 @@
+{
+  "name": "mdbeaver-bench",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tokens": "node --import ./node-shim.mjs tokens.mjs"
+  },
+  "dependencies": {
+    "js-tiktoken": "1.0.21",
+    "jsdom": "26.1.0",
+    "jszip": "3.10.1",
+    "pdfjs-dist": "4.10.38"
+  }
+}

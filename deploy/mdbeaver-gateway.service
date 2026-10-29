@@ -1,0 +1,26 @@
+[Unit]
+Description=mdbeaver gateway API
+After=network-online.target
+
+[Service]
+User=mdbeaver
+Group=mdbeaver
+WorkingDirectory=/opt/mdbeaver/gateway
+EnvironmentFile=/etc/mdbeaver/gateway.env
+ExecStart=/opt/mdbeaver/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --no-access-log --no-server-header
+Restart=always
+RestartSec=3
+
+StateDirectory=mdbeaver
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+ReadWritePaths=/var/lib/mdbeaver
+
+[Install]
+WantedBy=multi-user.target

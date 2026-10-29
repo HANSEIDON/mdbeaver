@@ -1,0 +1,12 @@
+{
+  "name": "mdbeaver-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "vendor": "node scripts/vendor.mjs"
+  },
+  "devDependencies": {
+    "jszip": "3.10.1",
+    "pdfjs-dist": "4.10.38"
+  }
+}

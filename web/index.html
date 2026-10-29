@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>mdbeaver — documents to AI-ready Markdown</title>
+  <meta name="description" content="Turn PDFs, Word files and slides into lean, AI-ready Markdown. Tables, formulas, Korean, Chinese and English.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/vendor/jszip.min.js" defer></script>
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="16" cy="16" r="15" class="logo-face"/>
+        <circle cx="7" cy="7" r="3.2" class="logo-face"/><circle cx="25" cy="7" r="3.2" class="logo-face"/>
+        <circle cx="11" cy="13" r="2" class="logo-eye"/><circle cx="21" cy="13" r="2" class="logo-eye"/>
+        <ellipse cx="16" cy="18" rx="4.5" ry="3" class="logo-nose"/>
+        <rect x="13.2" y="20.5" width="2.6" height="5" rx="0.7" class="logo-tooth"/>
+        <rect x="16.2" y="20.5" width="2.6" height="5" rx="0.7" class="logo-tooth"/>
+      </svg>
+      <span class="wordmark">mdbeaver</span>
+    </a>
+    <span id="status" class="status" data-state="unknown"><span class="dot"></span><span id="status-text">Checking…</span></span>
+  </header>
+
+  <main class="split">
+    <section class="pane source" aria-label="Source">
+      <div class="intro">
+        <h1>Documents, chewed into <em>AI-ready</em> Markdown.</h1>
+        <p>PDF, Word and PowerPoint in. Lean Markdown out — headings, tables and formulas kept, filler stripped so every token counts. Built for Korean, Chinese and English.</p>
+      </div>
+
+      <div id="drop" class="drop" tabindex="0" role="button" aria-label="Add documents">
+        <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0l-5 5m5-5l5 5M4 20h16"/></svg>
+        <p class="drop-title">Drop documents here</p>
+        <p class="drop-or">or</p>
+        <span class="btn">Browse files</span>
+        <input id="file" type="file" multiple accept=".pdf,.docx,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
+      </div>
+
+      <ul id="files" class="files" hidden></ul>
+
+      <p class="formats">PDF, DOCX, PPTX · add several at once · files are deleted right after conversion</p>
+    </section>
+
+    <section class="pane panel" aria-label="Conversion">
+      <nav class="tabs" role="tablist">
+        <button class="tab on" data-tab="config" role="tab">Settings</button>
+        <button class="tab" data-tab="results" role="tab">Results</button>
+      </nav>
+
+      <div id="tab-config" class="tab-body">
+        <div class="group">
+          <p class="label">Output</p>
+          <div class="profile">
+            <p class="profile-name">AI-optimized Markdown</p>
+            <ul class="profile-list">
+              <li>Headings, lists, tables and formulas (LaTeX) kept</li>
+              <li>Page headers, footers and page numbers removed</li>
+              <li>Compact tables, no decorative lines or invisible characters</li>
+              <li>Several files merged into one, each wrapped in <code>&lt;document&gt;</code></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="group">
+          <p class="label">Options</p>
+          <label class="check">
+            <input id="keep-pages" type="checkbox">
+            <span><strong>Keep page numbers</strong><small>Adds a short <code>[p.12]</code> marker per page so the AI can cite pages.</small></span>
+          </label>
+          <label class="check">
+            <input id="local-only" type="checkbox">
+            <span><strong>Browser only</strong><small>Convert on this device. Your files never leave it.</small></span>
+          </label>
+        </div>
+      </div>
+
+      <div id="tab-results" class="tab-body" hidden>
+        <div id="empty" class="empty">
+          <p>No output yet.</p>
+          <small>Add documents and press Convert.</small>
+        </div>
+        <div id="result" hidden>
+          <div class="result-bar">
+            <div>
+              <p id="result-name" class="result-name"></p>
+              <p id="result-stats" class="result-stats"></p>
+            </div>
+            <div class="actions">
+              <button id="copy" class="btn primary">Copy</button>
+              <button id="download" class="btn">Download .md</button>
+              <button id="download-zip" class="btn" hidden>Separate files (.zip)</button>
+            </div>
+          </div>
+          <textarea id="output" readonly spellcheck="false" aria-label="Markdown output"></textarea>
+        </div>
+      </div>
+
+      <div class="dock">
+        <div class="dock-info">
+          <p id="route" class="route"></p>
+          <p id="message" class="message" hidden></p>
+          <div id="bar" class="bar" hidden><div id="bar-fill"></div></div>
+        </div>
+        <button id="run" class="btn run" disabled>Convert</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

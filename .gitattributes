@@ -1,0 +1,10 @@
+# LF in the repo and on checkout: shell scripts run in WSL / on the Oracle server.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+*.pdf binary
+*.pptx binary
+*.docx binary
+*.png binary
+*.jpg binary

@@ -1,0 +1,84 @@
+{
+  "created": "2026-10-28T11:58:08.705Z",
+  "encoders": [
+    "o200k",
+    "cl100k"
+  ],
+  "results": [
+    {
+      "name": "sample-en-deck.pptx",
+      "kind": "pptx",
+      "bytes": 4679,
+      "lang": "en",
+      "ms": 30,
+      "tokens": {
+        "plain": {
+          "o200k": 57,
+          "cl100k": 57
+        },
+        "raw": {
+          "o200k": 102,
+          "cl100k": 102
+        },
+        "mdbeaver": {
+          "o200k": 78,
+          "cl100k": 78
+        },
+        "mdbeaver+pages": {
+          "o200k": 94,
+          "cl100k": 94
+        }
+      }
+    },
+    {
+      "name": "sample-en-report.pdf",
+      "kind": "pdf",
+      "bytes": 16065,
+      "lang": "en",
+      "ms": 87,
+      "tokens": {
+        "plain": {
+          "o200k": 2364,
+          "cl100k": 2364
+        },
+        "raw": {
+          "o200k": 2232,
+          "cl100k": 2232
+        },
+        "mdbeaver": {
+          "o200k": 2172,
+          "cl100k": 2172
+        },
+        "mdbeaver+pages": {
+          "o200k": 2220,
+          "cl100k": 2220
+        }
+      }
+    },
+    {
+      "name": "sample-ko-zh.docx",
+      "kind": "docx",
+      "bytes": 3466,
+      "lang": "ko",
+      "ms": 16,
+      "tokens": {
+        "plain": {
+          "o200k": 373,
+          "cl100k": 530
+        },
+        "raw": {
+          "o200k": 402,
+          "cl100k": 551
+        },
+        "mdbeaver": {
+          "o200k": 402,
+          "cl100k": 551
+        },
+        "mdbeaver+pages": {
+          "o200k": 402,
+          "cl100k": 551
+        }
+      }
+    }
+  ]
+}
