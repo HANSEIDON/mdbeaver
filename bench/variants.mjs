@@ -3,7 +3,9 @@
 //   plain            text layer copy-paste, no structure
 //   browser          in-browser converter only (the "Browser only" option)
 //   hybrid           the site's default: browser, with pages lacking a text layer from the GPU
-//   best             every page from the GPU ("Best quality")
+//   best             every page from the GPU, standard tier
+//   precise          every page from the GPU, advanced tier: the site's "Best quality"
+//                    (needs bench/out/worker-mineru-precise-<doc>.md)
 //   <variant>+pages  the same with [p.N] markers ("Keep page numbers")
 // GPU pages come from bench/out/worker-mineru-<doc>.md (worker/engines/mineru.py output).
 //
@@ -44,6 +46,10 @@ for (const name of (await readdir(DOCS)).filter((f) => f.endsWith(".pdf")).sort(
   const local = await pdfToMarkdown(new globalThis.BenchFile(bytes, name));
   const gpu = await readFile(gpuPath, "utf8");
   const raw = { browser: local, hybrid: hybrid(local, gpu, SCANNED_PAGE), best: gpu };
+  // The site's "Best quality" runs MinerU's advanced tier (mode "precise"): charts become tables,
+  // diagrams Mermaid or a description. `best` above is the standard tier (mode "fast").
+  const precisePath = join(ROOT, "out", `worker-mineru-precise-${doc}.md`);
+  if (existsSync(precisePath)) raw.precise = await readFile(precisePath, "utf8");
   const out = { plain: await plainText("pdf", bytes) };
   for (const [k, v] of Object.entries(raw)) {
     out[k] = optimize(v);

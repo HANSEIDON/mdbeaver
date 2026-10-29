@@ -24,7 +24,8 @@ from pathlib import Path
 BENCH = Path(__file__).resolve().parent
 URL = os.environ.get("MDB_LLM_URL", "http://127.0.0.1:813/v1").rstrip("/")
 MODEL = os.environ.get("MDB_LLM_MODEL", "qwen/qwen3.8-27b")
-VARIANTS = ["plain", "browser", "hybrid", "best", "browser+pages", "hybrid+pages", "best+pages", "images"]
+VARIANTS = ["plain", "browser", "hybrid", "best", "precise", "browser+pages", "hybrid+pages", "best+pages",
+            "precise+pages", "images"]
 
 SYSTEM = (
     "Answer the question using only the document provided. Reply with the short answer only "

@@ -1,0 +1,1666 @@
+{
+ "model": "qwen/qwen3.8-27b",
+ "minutes": 5.2,
+ "rows": [
+  {
+   "variant": "precise",
+   "doc": "en_paper_tables",
+   "id": "ept-1",
+   "type": "table",
+   "answer": "56",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2892
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_tables",
+   "id": "ept-2",
+   "type": "table",
+   "answer": "Magnetic resonance imaging (MRI)",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2891
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_tables",
+   "id": "ept-3",
+   "type": "table",
+   "answer": "19.7 g",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2895
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_tables",
+   "id": "ept-4",
+   "type": "table",
+   "answer": "Cribb and Hayes [16]; Hoffman et al. [20]",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2894
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_tables",
+   "id": "ept-5",
+   "type": "table",
+   "answer": "21 weeks",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2892
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_tables",
+   "id": "ept-6",
+   "type": "table",
+   "answer": "5 days per week",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2892
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_tables",
+   "id": "ept-7",
+   "type": "table",
+   "answer": "6.2 g",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2902
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_tables",
+   "id": "ept-8",
+   "type": "page",
+   "answer": "3",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2906
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_figs",
+   "id": "epf-1",
+   "type": "fact",
+   "answer": "Focal loss function",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1751
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_figs",
+   "id": "epf-2",
+   "type": "fact",
+   "answer": "A100 and T4",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1748
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_figs",
+   "id": "epf-3",
+   "type": "figure",
+   "answer": "FP32",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1750
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_figs",
+   "id": "epf-4",
+   "type": "fact",
+   "answer": "Four",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1751
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_figs",
+   "id": "epf-5",
+   "type": "fact",
+   "answer": "PANet",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1754
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_figs",
+   "id": "epf-6",
+   "type": "fact",
+   "answer": "Cross Stage Partial",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1744
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_figs",
+   "id": "epf-7",
+   "type": "figure",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1757
+  },
+  {
+   "variant": "precise",
+   "doc": "en_paper_figs",
+   "id": "epf-8",
+   "type": "page",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1764
+  },
+  {
+   "variant": "precise",
+   "doc": "en_textbook_tcp",
+   "id": "ett-1",
+   "type": "formula",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1680
+  },
+  {
+   "variant": "precise",
+   "doc": "en_textbook_tcp",
+   "id": "ett-2",
+   "type": "fact",
+   "answer": "1 second",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1679
+  },
+  {
+   "variant": "precise",
+   "doc": "en_textbook_tcp",
+   "id": "ett-3",
+   "type": "fact",
+   "answer": "RFC 6298",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1686
+  },
+  {
+   "variant": "precise",
+   "doc": "en_textbook_tcp",
+   "id": "ett-4",
+   "type": "fact",
+   "answer": "It is doubled.",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1684
+  },
+  {
+   "variant": "precise",
+   "doc": "en_textbook_tcp",
+   "id": "ett-5",
+   "type": "fact",
+   "answer": "Three",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1693
+  },
+  {
+   "variant": "precise",
+   "doc": "en_textbook_tcp",
+   "id": "ett-6",
+   "type": "fact",
+   "answer": "SendBase",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1702
+  },
+  {
+   "variant": "precise",
+   "doc": "en_textbook_tcp",
+   "id": "ett-7",
+   "type": "figure",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1694
+  },
+  {
+   "variant": "precise",
+   "doc": "en_textbook_tcp",
+   "id": "ett-8",
+   "type": "page",
+   "answer": "",
+   "correct": false,
+   "graded_by": "judge",
+   "prompt_tokens": 1705
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-1",
+   "type": "fact",
+   "answer": "물질민속, 사회민속, 정신민속, 언어민속",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2000
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-1",
+   "type": "fact",
+   "answer": "물질민속, 사회민속, 정신민속, 언어민속",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1873
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-2",
+   "type": "fact",
+   "answer": "钟敬文",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2007
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-2",
+   "type": "fact",
+   "answer": "钟敬文",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1880
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-3",
+   "type": "fact",
+   "answer": "3일째",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2013
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-3",
+   "type": "fact",
+   "answer": "3일째",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1886
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-4",
+   "type": "fact",
+   "answer": "20세",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2010
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-4",
+   "type": "fact",
+   "answer": "20세",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1883
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-5",
+   "type": "fact",
+   "answer": "남자 15세, 여자 13세",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2006
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-5",
+   "type": "fact",
+   "answer": "남 15세, 여 13세",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1879
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-6",
+   "type": "fact",
+   "answer": "납채",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2001
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-6",
+   "type": "fact",
+   "answer": "납채",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1874
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-7",
+   "type": "fact",
+   "answer": "분리 → 전이 → 통합",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2006
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-7",
+   "type": "fact",
+   "answer": "분리 → 전이 → 통합",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1879
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-8",
+   "type": "fact",
+   "answer": "장명쇄",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2010
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-8",
+   "type": "fact",
+   "answer": "장명쇄",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1883
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_text",
+   "id": "ko-9",
+   "type": "page",
+   "answer": "",
+   "correct": false,
+   "graded_by": "judge",
+   "prompt_tokens": 2023
+  },
+  {
+   "variant": "precise",
+   "doc": "ko_notes_scan",
+   "id": "ko-9",
+   "type": "page",
+   "answer": "",
+   "correct": false,
+   "graded_by": "judge",
+   "prompt_tokens": 1896
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_book_text",
+   "id": "zbt-1",
+   "type": "formula",
+   "answer": "1 - P(c|x)",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1833
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_book_text",
+   "id": "zbt-2",
+   "type": "fact",
+   "answer": "判别式模型",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1836
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_book_text",
+   "id": "zbt-3",
+   "type": "fact",
+   "answer": "先验概率",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1824
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_book_text",
+   "id": "zbt-4",
+   "type": "formula",
+   "answer": "$2^d$",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1834
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_book_text",
+   "id": "zbt-5",
+   "type": "fact",
+   "answer": "频率主义学派",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1826
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_book_text",
+   "id": "zbt-6",
+   "type": "formula",
+   "answer": "$$P(D_c \\mid \\boldsymbol{\\theta}_c)=\\prod_{\\boldsymbol{x}\\in D_c} P(\\boldsymbol{x}\\mid \\boldsymbol{\\theta}_c)$$",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1846
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_book_text",
+   "id": "zbt-7",
+   "type": "margin",
+   "answer": "二十世纪二三十年代",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1835
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_book_text",
+   "id": "zbt-8",
+   "type": "fact",
+   "answer": "MLE",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1825
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_db_scan",
+   "id": "zdb-1",
+   "type": "fact",
+   "answer": "4组7个等级",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1710
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_db_scan",
+   "id": "zdb-2",
+   "type": "table",
+   "answer": "labeled security protection",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1712
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_db_scan",
+   "id": "zdb-3",
+   "type": "fact",
+   "answer": "DOS",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1709
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_db_scan",
+   "id": "zdb-4",
+   "type": "fact",
+   "answer": "11大类、66个子类和135个组件",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1711
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_db_scan",
+   "id": "zdb-5",
+   "type": "table",
+   "answer": "B1",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1717
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_db_scan",
+   "id": "zdb-6",
+   "type": "figure",
+   "answer": "欧洲信息技术安全评估准则（ITSEC）",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1713
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_db_scan",
+   "id": "zdb-7",
+   "type": "figure",
+   "answer": "ISO 15408",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1718
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_db_scan",
+   "id": "zdb-8",
+   "type": "fact",
+   "answer": "Oracle 7",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1709
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_exam_formulas",
+   "id": "zex-1",
+   "type": "formula",
+   "answer": "\\(\\lim_{n\\to\\infty}\\left(1+\\frac{1}{ne}\\right)^n\\)",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1197
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_exam_formulas",
+   "id": "zex-2",
+   "type": "formula",
+   "answer": "1 到 2",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1204
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_exam_formulas",
+   "id": "zex-3",
+   "type": "fact",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1201
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_exam_formulas",
+   "id": "zex-4",
+   "type": "formula",
+   "answer": "\\sqrt{a_n b_n}",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1206
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_exam_formulas",
+   "id": "zex-5",
+   "type": "formula",
+   "answer": "\\((2x-1)(2x+3)(2x-5)\\)",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1200
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_exam_formulas",
+   "id": "zex-6",
+   "type": "fact",
+   "answer": "北京大学，22/23学年第1学期",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1197
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_exam_formulas",
+   "id": "zex-7",
+   "type": "formula",
+   "answer": "证明 \\(f(1)=g(1)\\)",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1196
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_handwritten",
+   "id": "zhw-1",
+   "type": "fact",
+   "answer": "2",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 4174
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_handwritten",
+   "id": "zhw-2",
+   "type": "formula",
+   "answer": "6",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 4179
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_handwritten",
+   "id": "zhw-3",
+   "type": "formula",
+   "answer": "(27, -18, 0)'",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 4165
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_handwritten",
+   "id": "zhw-4",
+   "type": "fact",
+   "answer": "仅身性、对称性、传递性",
+   "correct": false,
+   "graded_by": "judge",
+   "prompt_tokens": 4158
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_handwritten",
+   "id": "zhw-5",
+   "type": "fact",
+   "answer": "取相等的两个向量组不一定等价",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 4159
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_handwritten",
+   "id": "zhw-6",
+   "type": "fact",
+   "answer": "秩等于它所含向量的个数",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 4168
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_math_scan",
+   "id": "zms-1",
+   "type": "formula",
+   "answer": "n - rank(A)",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2856
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_math_scan",
+   "id": "zms-2",
+   "type": "fact",
+   "answer": "J",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2854
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_math_scan",
+   "id": "zms-3",
+   "type": "fact",
+   "answer": "把系数矩阵 \\(A\\) 经过初等行变换化成简化行阶梯形矩阵 \\(J\\)",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 2848
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_math_scan",
+   "id": "zms-4",
+   "type": "fact",
+   "answer": "通解",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2855
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_math_scan",
+   "id": "zms-5",
+   "type": "fact",
+   "answer": "本章 §3 的推论 4",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2848
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_math_scan",
+   "id": "zms-6",
+   "type": "fact",
+   "answer": "线性无关",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2855
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_slides",
+   "id": "zsl-1",
+   "type": "fact",
+   "answer": "信息增益",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1019
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_slides",
+   "id": "zsl-2",
+   "type": "fact",
+   "answer": "增益率",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1022
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_slides",
+   "id": "zsl-3",
+   "type": "formula",
+   "answer": "\\(Gini(D)=1-\\sum_{k=1}^{|Y|}p_k^2\\)",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1029
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_slides",
+   "id": "zsl-4",
+   "type": "fact",
+   "answer": "可取值数目较少的属性",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1020
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_slides",
+   "id": "zsl-5",
+   "type": "formula",
+   "answer": "信息增益除以分裂信息（Split INFO）",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1024
+  },
+  {
+   "variant": "precise",
+   "doc": "zh_slides",
+   "id": "zsl-6",
+   "type": "figure",
+   "answer": "0.5",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1025
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_tables",
+   "id": "ept-1",
+   "type": "table",
+   "answer": "56",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2907
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_tables",
+   "id": "ept-2",
+   "type": "table",
+   "answer": "Magnetic resonance imaging (MRI)",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2906
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_tables",
+   "id": "ept-3",
+   "type": "table",
+   "answer": "19.7 g",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2910
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_tables",
+   "id": "ept-4",
+   "type": "table",
+   "answer": "Cribb and Hayes, [16]; Hoffman et al., [20]",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2909
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_tables",
+   "id": "ept-5",
+   "type": "table",
+   "answer": "21 weeks",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2907
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_tables",
+   "id": "ept-6",
+   "type": "table",
+   "answer": "5 days per week",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2907
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_tables",
+   "id": "ept-7",
+   "type": "table",
+   "answer": "6.2 g",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2917
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_tables",
+   "id": "ept-8",
+   "type": "page",
+   "answer": "3",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2921
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_figs",
+   "id": "epf-1",
+   "type": "fact",
+   "answer": "Focal loss function",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1766
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_figs",
+   "id": "epf-2",
+   "type": "fact",
+   "answer": "A100 and T4",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1763
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_figs",
+   "id": "epf-3",
+   "type": "figure",
+   "answer": "FP32",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1765
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_figs",
+   "id": "epf-4",
+   "type": "fact",
+   "answer": "Four",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1766
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_figs",
+   "id": "epf-5",
+   "type": "fact",
+   "answer": "PANet",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1769
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_figs",
+   "id": "epf-6",
+   "type": "fact",
+   "answer": "Cross Stage Partial",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1759
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_figs",
+   "id": "epf-7",
+   "type": "figure",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1772
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_paper_figs",
+   "id": "epf-8",
+   "type": "page",
+   "answer": "3",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1779
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_textbook_tcp",
+   "id": "ett-1",
+   "type": "formula",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1695
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_textbook_tcp",
+   "id": "ett-2",
+   "type": "fact",
+   "answer": "1 second",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1694
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_textbook_tcp",
+   "id": "ett-3",
+   "type": "fact",
+   "answer": "RFC 6298",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1701
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_textbook_tcp",
+   "id": "ett-4",
+   "type": "fact",
+   "answer": "It is doubled.",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1699
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_textbook_tcp",
+   "id": "ett-5",
+   "type": "fact",
+   "answer": "Three",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1708
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_textbook_tcp",
+   "id": "ett-6",
+   "type": "fact",
+   "answer": "SendBase",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1717
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_textbook_tcp",
+   "id": "ett-7",
+   "type": "figure",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1709
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "en_textbook_tcp",
+   "id": "ett-8",
+   "type": "page",
+   "answer": "2",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1720
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-1",
+   "type": "fact",
+   "answer": "물질민속, 사회민속, 정신민속, 언어민속",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2015
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-1",
+   "type": "fact",
+   "answer": "물질, 사회, 정신, 언어 민속",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1888
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-2",
+   "type": "fact",
+   "answer": "钟敬文",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2022
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-2",
+   "type": "fact",
+   "answer": "钟敬文",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1895
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-3",
+   "type": "fact",
+   "answer": "3일째",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2028
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-3",
+   "type": "fact",
+   "answer": "3일째",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1901
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-4",
+   "type": "fact",
+   "answer": "20세",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2025
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-4",
+   "type": "fact",
+   "answer": "20세",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1898
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-5",
+   "type": "fact",
+   "answer": "남 15세, 여 13세",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2021
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-5",
+   "type": "fact",
+   "answer": "남 15세, 여 13세",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1894
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-6",
+   "type": "fact",
+   "answer": "납채",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2016
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-6",
+   "type": "fact",
+   "answer": "납채",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1889
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-7",
+   "type": "fact",
+   "answer": "분리 → 전이 → 통합",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2021
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-7",
+   "type": "fact",
+   "answer": "분리 → 전이 → 통합",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1894
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-8",
+   "type": "fact",
+   "answer": "장명쇄",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2025
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-8",
+   "type": "fact",
+   "answer": "장명쇄",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1898
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_text",
+   "id": "ko-9",
+   "type": "page",
+   "answer": "3",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2038
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "ko_notes_scan",
+   "id": "ko-9",
+   "type": "page",
+   "answer": "3",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1911
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_book_text",
+   "id": "zbt-1",
+   "type": "formula",
+   "answer": "1 - P(c|x)",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1843
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_book_text",
+   "id": "zbt-2",
+   "type": "fact",
+   "answer": "判别式模型",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1846
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_book_text",
+   "id": "zbt-3",
+   "type": "fact",
+   "answer": "先验概率",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1834
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_book_text",
+   "id": "zbt-4",
+   "type": "formula",
+   "answer": "2^d",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1844
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_book_text",
+   "id": "zbt-5",
+   "type": "fact",
+   "answer": "频率主义学派",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1836
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_book_text",
+   "id": "zbt-6",
+   "type": "formula",
+   "answer": "$$P(D_c \\mid \\boldsymbol{\\theta}_c)=\\prod_{\\boldsymbol{x}\\in D_c} P(\\boldsymbol{x}\\mid \\boldsymbol{\\theta}_c)$$",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1856
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_book_text",
+   "id": "zbt-7",
+   "type": "margin",
+   "answer": "二十世纪二三十年代",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1845
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_book_text",
+   "id": "zbt-8",
+   "type": "fact",
+   "answer": "MLE",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1835
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_db_scan",
+   "id": "zdb-1",
+   "type": "fact",
+   "answer": "4组7个等级",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1725
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_db_scan",
+   "id": "zdb-2",
+   "type": "table",
+   "answer": "labeled security protection",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1727
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_db_scan",
+   "id": "zdb-3",
+   "type": "fact",
+   "answer": "DOS",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1724
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_db_scan",
+   "id": "zdb-4",
+   "type": "fact",
+   "answer": "11大类、66个子类和135个组件",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1726
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_db_scan",
+   "id": "zdb-5",
+   "type": "table",
+   "answer": "B1",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1732
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_db_scan",
+   "id": "zdb-6",
+   "type": "figure",
+   "answer": "欧洲信息技术安全评估准则（ITSEC）",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1728
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_db_scan",
+   "id": "zdb-7",
+   "type": "figure",
+   "answer": "ISO 15408",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1733
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_db_scan",
+   "id": "zdb-8",
+   "type": "fact",
+   "answer": "Oracle 7",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1724
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_exam_formulas",
+   "id": "zex-1",
+   "type": "formula",
+   "answer": "\\(\\lim_{n\\to\\infty}\\left(1+\\frac{1}{ne}\\right)^n\\)",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1207
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_exam_formulas",
+   "id": "zex-2",
+   "type": "formula",
+   "answer": "1 到 2",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1214
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_exam_formulas",
+   "id": "zex-3",
+   "type": "fact",
+   "answer": "NOT FOUND",
+   "correct": false,
+   "graded_by": "rule",
+   "prompt_tokens": 1211
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_exam_formulas",
+   "id": "zex-4",
+   "type": "formula",
+   "answer": "$\\sqrt{a_n b_n}$",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1216
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_exam_formulas",
+   "id": "zex-5",
+   "type": "formula",
+   "answer": "(2x-1)(2x+3)(2x-5)",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1210
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_exam_formulas",
+   "id": "zex-6",
+   "type": "fact",
+   "answer": "北京大学 22/23 学年第 1 学期",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1207
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_exam_formulas",
+   "id": "zex-7",
+   "type": "formula",
+   "answer": "证明 \\(f(1)=g(1)\\)",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1206
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_handwritten",
+   "id": "zhw-1",
+   "type": "fact",
+   "answer": "2",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 4184
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_handwritten",
+   "id": "zhw-2",
+   "type": "formula",
+   "answer": "6",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 4189
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_handwritten",
+   "id": "zhw-3",
+   "type": "formula",
+   "answer": "(27, -18, 0)'",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 4175
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_handwritten",
+   "id": "zhw-4",
+   "type": "fact",
+   "answer": "仅身性、对称性、传递性",
+   "correct": false,
+   "graded_by": "judge",
+   "prompt_tokens": 4168
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_handwritten",
+   "id": "zhw-5",
+   "type": "fact",
+   "answer": "取相等的两个向量组不一定等价",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 4169
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_handwritten",
+   "id": "zhw-6",
+   "type": "fact",
+   "answer": "秩等于它所含向量的个数",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 4178
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_math_scan",
+   "id": "zms-1",
+   "type": "formula",
+   "answer": "n - rank(A)",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2871
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_math_scan",
+   "id": "zms-2",
+   "type": "fact",
+   "answer": "J",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2869
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_math_scan",
+   "id": "zms-3",
+   "type": "fact",
+   "answer": "把系数矩阵 A 经初等行变换化成简化行阶梯形矩阵 J",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 2863
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_math_scan",
+   "id": "zms-4",
+   "type": "fact",
+   "answer": "通解",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2870
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_math_scan",
+   "id": "zms-5",
+   "type": "fact",
+   "answer": "§3 的推论 4",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2863
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_math_scan",
+   "id": "zms-6",
+   "type": "fact",
+   "answer": "线性无关",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 2870
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_slides",
+   "id": "zsl-1",
+   "type": "fact",
+   "answer": "信息增益",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1039
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_slides",
+   "id": "zsl-2",
+   "type": "fact",
+   "answer": "增益率",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1042
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_slides",
+   "id": "zsl-3",
+   "type": "formula",
+   "answer": "\\(1-\\sum_{k=1}^{|Y|}p_k^2\\)",
+   "correct": true,
+   "graded_by": "judge",
+   "prompt_tokens": 1049
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_slides",
+   "id": "zsl-4",
+   "type": "fact",
+   "answer": "可取值数目较少的属性",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1040
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_slides",
+   "id": "zsl-5",
+   "type": "formula",
+   "answer": "GAIN_Split 除以 SplitINFO",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1044
+  },
+  {
+   "variant": "precise+pages",
+   "doc": "zh_slides",
+   "id": "zsl-6",
+   "type": "figure",
+   "answer": "0.5",
+   "correct": true,
+   "graded_by": "rule",
+   "prompt_tokens": 1045
+  }
+ ]
+}
