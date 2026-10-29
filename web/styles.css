@@ -221,15 +221,13 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .art-hello { position: absolute; top: -48px; right: -40px; width: 360px; opacity: 0.15; pointer-events: none; -webkit-mask-image: linear-gradient(#000 50%, transparent 82%); mask-image: linear-gradient(#000 50%, transparent 82%); }
 .h2-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .h2-row h2 { margin-bottom: 16px; }
-.art-walk { width: 130px; margin: -36px 4px -4px 0; transform-origin: 50% 100%; animation: waddle 1.4s ease-in-out infinite; }
-@keyframes waddle { 25% { transform: rotate(-3deg) translateY(-2px); } 75% { transform: rotate(3deg) translateY(-2px); } }
-@media (prefers-reduced-motion: reduce) { .art-walk { animation: none; } }
+.art-walk { width: 130px; margin: -36px 4px -4px 0; }
 /* the beaver bites the top edge of the token chart; about.js plays it when the chart scrolls in.
-   Two frames with the same framing (mouth open, biting); the board edge sits 52.7% down them. */
+   Two frames with the same framing (mouth open, then head dipped and biting); the board edge sits 68.7% down them. */
 .tokens { --cw: 170px; }
 .tokens .stat { padding-right: calc(var(--cw) + 24px); }
 .chart { position: relative; }
-.chomp { position: absolute; z-index: 3; right: 18px; top: calc(var(--cw) * -0.527 - 1px); width: var(--cw); pointer-events: none; }
+.chomp { position: absolute; z-index: 3; right: 18px; top: calc(var(--cw) * -0.687 - 1px); width: var(--cw); pointer-events: none; }
 .chomp img { display: block; width: 100%; height: auto; }
 .chomp .chomp-bite { position: absolute; inset: 0; }
 .crumbs { position: absolute; z-index: 2; top: 2px; right: calc(18px + var(--cw) * 0.5); width: 0; height: 0; }
@@ -239,20 +237,15 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .chart.armed .chomp-bite { opacity: 0; }
 .chart.armed .is-ours .bar { width: 100%; }
 .chart.chomped .chomp { opacity: 1; transform: none; transition: opacity 0.2s, transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1); }
-/* three bites: open, bite, open, bite, open, bite, and it keeps the last bite */
-.chart.chomped .chomp-bite { animation: bite-frame 0.34s 0.45s 3 step-end forwards; }
-.chart.chomped .chomp img:first-child { animation: bite-bob 0.34s 0.45s 3; }
+/* one bite: it pops up with its mouth open, then dips and bites, and keeps biting */
+.chart.chomped .chomp-bite { opacity: 1; transition: opacity 0.04s 0.6s; }
 .chart.chomped { animation: shake 0.3s 0.62s; }
 .chart.chomped .crumbs i { animation: crumb 1s 0.62s cubic-bezier(0.2, 0.6, 0.4, 1) forwards; }
-.chart.chomped .is-ours .bar { width: var(--w); transition-delay: 0.7s; }
-@keyframes bite-frame { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 1; } }
-@keyframes bite-bob { 50% { transform: translateY(3px); } }
+.chart.chomped .is-ours .bar { width: var(--w); transition-delay: 0.68s; }
 @keyframes shake { 25% { transform: translate(-2px, 1px); } 50% { transform: translate(2px, -1px); } 75% { transform: translate(-1px, 0); } }
 @keyframes crumb { 0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(var(--s)); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(var(--s)); } }
 /* drifting in the dam: the water is the page navy, faded out at the edges */
-.art-float { width: min(100%, 500px); margin: 8px auto 0; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 66%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 66%, transparent 100%); animation: drift 7s ease-in-out infinite; }
-@keyframes drift { 50% { transform: translate(10px, -5px) rotate(-1.5deg); } }
-@media (prefers-reduced-motion: reduce) { .art-float { animation: none; } }
+.art-float { width: min(100%, 500px); margin: 8px auto 0; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 66%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 66%, transparent 100%); }
 .about { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; display: flex; flex-direction: column; gap: 56px; }
 .about h1 { margin: 0 0 14px; font: 600 44px/1.1 var(--sans); letter-spacing: -0.03em; }
 .about h2 { margin: 0 0 16px; font: 600 24px/1.25 var(--sans); letter-spacing: -0.02em; }
