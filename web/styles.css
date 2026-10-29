@@ -272,6 +272,8 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .bar-label { font-size: 14px; color: var(--ink); }
 .bar-label small, .bar-value small { font: 12px var(--sans); color: var(--ink-3); }
 .bar-track { height: 18px; display: flex; align-items: center; }
+/* bar lengths live here, not in style attributes: the site's CSP blocks inline styles */
+.w-images { --w: 100%; } .w-best { --w: 53.8%; } .w-standard { --w: 44.1%; } .w-text { --w: 33.2%; }
 .bar { display: block; height: 14px; width: var(--w); background: #5b7a9c; border-radius: 0 4px 4px 0; }
 .is-ours .bar { background: var(--accent); }
 .is-ours .bar-label { font-weight: 600; }
