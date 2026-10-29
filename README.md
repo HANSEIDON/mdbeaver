@@ -2,7 +2,7 @@
 
 PDF / PPTX → AI-ready Markdown. Live at https://mdbeaver.com
 
-Design notes and decisions: [docs/DESIGN.md](docs/DESIGN.md) · Server setup: [docs/ORACLE_SETUP.md](docs/ORACLE_SETUP.md)
+Design notes and decisions: [docs/DESIGN.md](docs/DESIGN.md)
 
 ## Layout
 

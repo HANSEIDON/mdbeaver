@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Downloads every GPU engine candidate for the Phase 0 benchmark (docs/HOME_GPU_SETUP.md §3-4).
+# Downloads every GPU engine candidate for the Phase 0 benchmark.
 #
 # Run inside WSL (Ubuntu-24.04) with the VPN OFF: only China mirrors are used.
 # Safe to re-run: finished steps are skipped (markers in $MDB_HOME/.state), pip/ModelScope reuse

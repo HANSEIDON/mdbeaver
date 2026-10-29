@@ -1,3 +1,6 @@
+# Private notes (handoff docs, server details) — never commit
+private/
+
 # Secrets — never commit
 .env
 *.env
