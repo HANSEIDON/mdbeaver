@@ -94,11 +94,13 @@ function renderFiles() {
     const statusCell = cell(`num st ${item.status || ""}`, (item.status === "warn" ? "⚠ " : "") + (item.info || "ready"));
     item.bar = item.statusCell = null;
     if (item.status === "busy") {
-      // A thin line under the name; progress() moves it and the status text without a re-render.
+      // A thin line right of the name; progress() fills it and updates the status without a re-render.
       const pbar = Object.assign(document.createElement("span"), { className: "pbar" });
       item.bar = pbar.appendChild(document.createElement("i"));
       setBar(item.bar, item.progress ?? 0);
-      nameCell.append(pbar);
+      const line = Object.assign(document.createElement("div"), { className: "name-line" });
+      line.append(Object.assign(document.createElement("span"), { className: "fname", textContent: item.file.name }), pbar);
+      nameCell.replaceChildren(line);
       item.statusCell = statusCell;
     }
     tr.append(nameCell, cell("num", formatSize(item.file.size)), statusCell, removeCell);
@@ -134,22 +136,28 @@ drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove
 $("file").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
 
 // --- progress: the bottom line follows the whole run, each file row has its own line ---
-// f is 0..1, or null while the GPU works (it reports no page count): the line then slides.
-function setBar(el, f) {
-  el.classList.toggle("indeterminate", f === null);
-  el.style.width = f === null ? "" : `${Math.round(f * 100)}%`;
-}
+// f is 0..1 for one file. A PDF's browser pass fills the first 40% (the GPU may still follow);
+// the GPU reports no page progress, so its part fills by an estimate from the page count.
+const BROWSER_SHARE = 0.4;
+const setBar = (el, f) => { el.style.width = `${Math.round(f * 100)}%`; };
 
 function progress(text, item, f, short) {
   $("working").hidden = false;
   $("working-text").textContent = text;
   if (!item) return;
-  item.progress = f;
+  item.progress = f = Math.max(f, item.progress ?? 0); // never runs backwards
   const i = state.items.indexOf(item), n = state.items.length;
   $("working-count").textContent = n > 1 ? `${i + 1} of ${n}` : "";
-  setBar($("working-bar"), f === null ? null : (i + f) / n);
+  setBar($("working-bar"), (i + f) / n);
   if (item.bar) setBar(item.bar, f);
-  if (item.statusCell) item.statusCell.textContent = short ?? (f === null ? "on the GPU" : `${Math.round(f * 100)}%`);
+  if (item.statusCell) item.statusCell.textContent = short ?? `${Math.round(f * 100)}%`;
+}
+
+// Text pages take about a second on the home GPU (figure-heavy ones several), plus start-up. The
+// line approaches the end without reaching it, so a slow job never looks finished.
+function gpuEstimate(started, pages, mode) {
+  const expected = 2 + pages * (mode === "precise" ? 1.6 : 1);
+  return BROWSER_SHARE + (0.97 - BROWSER_SHARE) * (1 - Math.exp(-(Date.now() - started) / 1000 / expected));
 }
 
 // --- conversion paths --------------------------------------------------
@@ -166,7 +174,7 @@ async function convertLocal(item, label, signal) {
   const convert = await CONVERTERS[item.kind]();
   return convert(item.file, (f) => {
     if (signal?.aborted) throw stopped();
-    progress(`Reading ${label} in your browser`, item, f);
+    progress(`Reading ${label} in your browser`, item, item.kind === "pdf" ? f * BROWSER_SHARE : f);
   });
 }
 
@@ -175,8 +183,8 @@ const sleep = (ms, signal) => new Promise((resolve, reject) => {
   signal?.addEventListener("abort", () => { clearTimeout(t); reject(stopped()); }, { once: true });
 });
 
-async function convertServer(item, label, mode, pages, signal) {
-  progress(`Sending ${label} to the GPU`, item, null, "sending");
+async function convertServer(item, label, mode, pages, pageCount, signal) {
+  progress(`Sending ${label} to the GPU`, item, BROWSER_SHARE, "sending");
   const form = new FormData();
   form.append("file", item.file);
   form.append("mode", mode);
@@ -190,11 +198,15 @@ async function convertServer(item, label, mode, pages, signal) {
   const { id } = await r.json();
   // On Stop, withdraw the job so the GPU does not work on it (and the file is deleted at once).
   signal?.addEventListener("abort", () => fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {}), { once: true });
+  let started = null;
   for (;;) {
-    await sleep(1500, signal);
+    await sleep(1000, signal);
     const s = await (await fetch(`/api/jobs/${id}`, { cache: "no-store", signal })).json();
-    if (s.status === "queued") progress(`${label} · in line for the GPU, #${s.position}`, item, null, `in line #${s.position}`);
-    else if (s.status === "running") progress(`Reading ${label} on the GPU`, item, null);
+    if (s.status === "queued") progress(`${label} · in line for the GPU, #${s.position}`, item, BROWSER_SHARE, `in line #${s.position}`);
+    else if (s.status === "running") {
+      started ??= Date.now();
+      progress(`Reading ${label} on the GPU`, item, gpuEstimate(started, pageCount, mode));
+    }
     else if (s.status === "done") {
       fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {});
       return s.markdown;
@@ -245,7 +257,7 @@ async function convert(item, label, onDraft, signal) {
   if (target.length > GPU_MAX_PAGES) return missed("too_many");
   onDraft(local);
   try {
-    const gpu = await convertServer(item, label, best ? "precise" : "fast", best ? null : target, signal);
+    const gpu = await convertServer(item, label, best ? "precise" : "fast", best ? null : target, target.length, signal);
     return { markdown: replacePages(local, gpu), gpu: "done" };
   } catch (e) {
     if (!e.fallback) throw e;
@@ -360,6 +372,7 @@ async function run() {
       const tokens = estimateTokens(optimize(markdown));
       item.status = gpu in WHY ? "warn" : "done"; item.info = `done · ${tokens.toLocaleString()} tokens`;
       if (gpu in WHY) { warnings.push({ name: item.file.name, gpu, empty, layout }); renderNotice(warnings); }
+      setBar($("working-bar"), (i + 1) / state.items.length);
       showResults();
     } catch (e) {
       if (e.name === "AbortError") {
