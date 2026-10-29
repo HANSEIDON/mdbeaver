@@ -84,8 +84,15 @@ function renderFiles() {
     remove.addEventListener("click", () => { state.items.splice(i, 1); renderFiles(); });
     const removeCell = cell("num", "");
     removeCell.append(remove);
-    tr.append(cell("name", item.file.name), cell("num", formatSize(item.file.size)),
-      cell(`num st ${item.status || ""}`, item.info || "ready"), removeCell);
+    const nameCell = cell("name", "");
+    if (state.results.some((r) => r.name === item.file.name)) {
+      // Converted: the name jumps to where this file starts in the output.
+      const jump = Object.assign(document.createElement("button"), { className: "jump", textContent: item.file.name, title: "Show in the output" });
+      jump.addEventListener("click", () => jumpTo(item.file.name));
+      nameCell.append(jump);
+    } else nameCell.textContent = item.file.name;
+    tr.append(nameCell, cell("num", formatSize(item.file.size)),
+      cell(`num st ${item.status || ""}`, (item.status === "warn" ? "⚠ " : "") + (item.info || "ready")), removeCell);
     return tr;
   }));
   $("files").parentElement.classList.toggle("has-rows", state.items.length > 0);
@@ -194,8 +201,9 @@ function replacePages(local, gpu) {
   return [...pages.entries()].sort((a, b) => a[0] - b[0]).map(([, c]) => c).join("\n\n") + "\n";
 }
 
-// Returns { markdown, gpu } where gpu is "unneeded", "done", or why scanned pages stayed empty:
-// "offline" (no worker / browser-only), "too_many" (over GPU_MAX_PAGES) or "failed".
+// Returns { markdown, gpu, empty, layout } where gpu is "unneeded", "done", or why the pages the
+// browser couldn't read stayed that way: "offline" (no worker / Device only), "too_big" (over the
+// upload limit), "too_many" (over GPU_MAX_PAGES) or "failed". empty/layout list those pages.
 async function convert(item, label, onDraft, signal) {
   const local = await convertLocal(item, label, signal);
   if (item.kind !== "pdf") return { markdown: local, gpu: "unneeded" };
@@ -203,13 +211,15 @@ async function convert(item, label, onDraft, signal) {
   const pages = splitPages(local);
   const all = [...pages.keys()];
   // Pages the browser could not read (scans) or could only guess the layout of (columns).
-  const scanned = all.filter((n) => pages.get(n).endsWith(SCANNED_PAGE) || pages.get(n).endsWith(NEEDS_GPU));
+  const empty = all.filter((n) => pages.get(n).endsWith(SCANNED_PAGE));
+  const layout = all.filter((n) => pages.get(n).endsWith(NEEDS_GPU));
+  const scanned = [...empty, ...layout];
   // Best quality redoes every page, unless that is over the GPU limit: then only the scans.
   const best = mode() === "best" && all.length <= GPU_MAX_PAGES;
   const target = best ? all : scanned;
-  const missed = (why) => ({ markdown: local, gpu: scanned.length ? why : "unneeded" });
+  const missed = (why) => ({ markdown: local, gpu: scanned.length ? why : "unneeded", empty, layout });
   if (!target.length) return { markdown: local, gpu: "unneeded" };
-  if (!canUseGpu(item)) return missed("offline");
+  if (!canUseGpu(item)) return missed(state.workerOnline && mode() !== "device" ? "too_big" : "offline");
   if (target.length > GPU_MAX_PAGES) return missed("too_many");
   onDraft(local);
   try {
@@ -242,6 +252,43 @@ function renderOutput() {
   $("download-zip").hidden = outs.length < 2;
 }
 
+// Shows the output from where a file starts (its <document> line when several are merged).
+function jumpTo(name) {
+  showTab("results");
+  const tag = `<document name="${name.replace(/"/g, "'")}"`;
+  const i = state.results.length > 1 ? Math.max(0, state.md.split("\n").findIndex((l) => l.startsWith(tag))) : 0;
+  const line = $("output").children[i];
+  $("result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  $("output").scrollTo({ top: line ? line.offsetTop - 12 : 0, behavior: "smooth" });
+  line?.classList.add("flash");
+  setTimeout(() => line?.classList.remove("flash"), 1200);
+}
+
+// Pages the browser couldn't read and the GPU didn't redo, per file, above the output.
+const pageList = (ns) => ns.reduce((out, n, i) => {
+  if (i && n === ns[i - 1] + 1) out[out.length - 1][1] = n; else out.push([n, n]);
+  return out;
+}, []).map(([a, b]) => (a === b ? `${a}` : `${a}–${b}`)).join(", ");
+const count = (n, what) => `${n} ${what}${n > 1 ? "s" : ""}`;
+const WHY = {
+  offline: () => (mode() === "device" ? "Device only is on, so they weren't sent to the GPU." : "The GPU is resting right now; try again later."),
+  too_big: () => `The file is over ${state.maxMb} MB, the most the GPU accepts.`,
+  too_many: () => `That's more than the ${GPU_MAX_PAGES} pages the GPU takes per file.`,
+  failed: () => "The GPU couldn't finish them; try again.",
+};
+
+function renderNotice(warnings) {
+  $("notice").hidden = !warnings.length;
+  $("notice-list").replaceChildren(...warnings.map((w) => {
+    const parts = [];
+    if (w.empty.length) parts.push(`${count(w.empty.length, "scanned page")} came out empty (p. ${pageList(w.empty)})`);
+    if (w.layout.length) parts.push(`${count(w.layout.length, "multi-column page")} may be out of order (p. ${pageList(w.layout)})`);
+    const li = document.createElement("li");
+    li.append(Object.assign(document.createElement("strong"), { textContent: w.name }), ` · ${parts.join("; ")}. ${WHY[w.gpu]()}`);
+    return li;
+  }));
+}
+
 async function run() {
   if (!state.items.length || state.busy) return;
   state.busy = true;
@@ -251,7 +298,8 @@ async function run() {
   setMessage("");
   let failed = 0;
   let halted = false;
-  const missed = { offline: 0, too_many: 0, failed: 0 };
+  const warnings = [];
+  renderNotice([]);
   for (const item of state.items) { item.status = ""; item.info = "waiting"; }
   renderFiles();
   showTab("results");
@@ -276,12 +324,12 @@ async function run() {
       showResults();
     };
     try {
-      const { markdown, gpu } = await convert(item, label, onDraft, controller.signal);
-      if (gpu in missed) missed[gpu]++;
+      const { markdown, gpu, empty, layout } = await convert(item, label, onDraft, controller.signal);
       result.raw = markdown;
       if (!state.results.includes(result)) state.results.push(result);
       const tokens = estimateTokens(optimize(markdown));
-      item.status = "done"; item.info = `done · ${tokens.toLocaleString()} tokens`;
+      item.status = gpu in WHY ? "warn" : "done"; item.info = `done · ${tokens.toLocaleString()} tokens`;
+      if (gpu in WHY) { warnings.push({ name: item.file.name, gpu, empty, layout }); renderNotice(warnings); }
     } catch (e) {
       if (e.name === "AbortError") {
         halted = true;
@@ -299,21 +347,14 @@ async function run() {
   state.abort = null;
   // Lock Convert only after a clean, complete run; after a stop, failure or skipped GPU pages
   // the same inputs can be converted again.
-  const clean = !halted && !failed && !Object.values(missed).some(Boolean);
+  const clean = !halted && !failed && !warnings.length;
   state.doneFor = clean ? inputsKey() : null;
   $("working").hidden = true;
   renderFiles();
   if (state.results.length) showResults();
   const notes = [];
-  const n = (k) => `${k} PDF${k > 1 ? "s" : ""}`;
   if (halted) notes.push("Stopped. Files already converted are kept.");
-  if (failed) notes.push(`${failed} file${failed > 1 ? "s" : ""} couldn't be converted.`);
-  const why = "scanned pages are empty, multi-column pages may be out of order";
-  if (missed.offline) notes.push(mode() === "device"
-    ? `${n(missed.offline)} had pages that need the GPU (Device only is on): ${why}.`
-    : `${n(missed.offline)} had pages that need the GPU, which is resting: ${why}. Try again later.`);
-  if (missed.too_many) notes.push(`${n(missed.too_many)} had more than ${GPU_MAX_PAGES} pages that need the GPU (over its limit): ${why}.`);
-  if (missed.failed) notes.push(`The GPU server couldn't finish ${n(missed.failed)}: ${why}.`);
+  if (failed) notes.push(`${count(failed, "file")} couldn't be converted.`);
   setMessage(notes.join(" "), failed > 0);
 }
 $("run").addEventListener("click", run);
