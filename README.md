@@ -51,4 +51,15 @@ MDB_ENGINE=basic
 
 Then `.venv/Scripts/python worker.py`. The site's status dot turns green while the worker is connected.
 
-Engines live in `worker/engines/` and share `convert(path, kind, mode) -> markdown`. `basic` reads the PDF text layer on CPU. `mineru` (GPU, chosen in `bench/results/engines-2026-10-29.md`) calls the MinerU API, which runs in WSL: start it with `wsl -d Ubuntu-24.04 -- bash worker/mineru-server.sh` (models load in ~1–3 min), then set `MDB_ENGINE=mineru`. MinerU's licence requires the attribution line in `web/index.html` to be live before the site serves MinerU output.
+Engines live in `worker/engines/` and share `convert(path, kind, mode, pages, max_pages) -> markdown`. `basic` reads the PDF text layer on CPU. `mineru` (GPU, chosen in `bench/results/engines-2026-10-29.md`) calls the MinerU API, which runs in WSL: start it with `wsl -d Ubuntu-24.04 -- bash worker/mineru-server.sh` (models load in ~1–3 min), then set `MDB_ENGINE=mineru`. MinerU's licence requires the attribution line (Credits on `web/about.html`) to be live before the site serves MinerU output.
+
+### Friend codes
+
+A GPU job is limited to `MDB_MAX_GPU_PAGES` (50) pages. To let friends send longer PDFs, add codes to the gateway's env file and restart it:
+
+```
+MDB_FRIEND_CODES=friends:<code>,alice:<another code>
+MDB_FRIEND_MAX_PAGES=300
+```
+
+They paste the code under Settings → Friend code; it is remembered in their browser. Remove a name from the list to revoke it.
