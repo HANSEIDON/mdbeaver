@@ -7,9 +7,7 @@
 #
 # Layout (WSL home, not /mnt/c: OneDrive sync and 9P I/O are slow for venvs and weights):
 #   ~/mdb/venvs/{paddle,mineru,ovis}   one venv per engine (their torch/transformers pins conflict)
-#   ~/mdb/models/OvisOCR2              OvisOCR2 weights
-#   ~/mdb/models/Qwen3.5-9B            answering model for the accuracy benchmark
-#   PaddleOCR / MinerU keep weights in their own caches (~/.paddlex, ~/.mineru)
+#   ~/mdb/models/OvisOCR2              OvisOCR2 weights#   PaddleOCR / MinerU keep weights in their own caches (~/.paddlex, ~/.mineru)
 #
 # Sources (checked 2026-10-28):
 #   PaddleOCR-VL Blackwell guide: paddlepaddle-gpu==3.2.1 from the cu129 index + paddleocr[doc-parser];
@@ -123,14 +121,6 @@ ovis_install() {
 ovis_models() {
     "$MDB_HOME/venvs/ovis/bin/modelscope" download --model ATH-MaaS/OvisOCR2 --local_dir "$MDB_HOME/models/OvisOCR2"
 }
-
-# --- Qwen3.5-9B: answering model for the accuracy benchmark (docs/BENCHMARK.md, C) ---------
-# Apache 2.0, ~19 GB bf16. Same architecture as OvisOCR2 (Qwen3_5ForConditionalGeneration),
-# so the OvisOCR2 venv's vLLM 0.22.1 runs it; only the weights are new.
-llm_models() {
-    "$MDB_HOME/venvs/ovis/bin/modelscope" download --model Qwen/Qwen3.5-9B --local_dir "$MDB_HOME/models/Qwen3.5-9B"
-}
-
 log "===== download.sh start (pid $$) ====="
 nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv || true
 wait_for_network
@@ -140,7 +130,6 @@ step mineru_install mineru_install
 step mineru_models mineru_models
 step ovis_install ovis_install
 step ovis_models ovis_models
-step llm_models llm_models
 CURRENT="finish"
 du -sh "$MDB_HOME" "$HOME/.paddlex" "$HOME/.mineru" 2>/dev/null || true
 log "===== ALL DONE ====="
