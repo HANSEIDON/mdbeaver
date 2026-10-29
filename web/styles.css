@@ -218,20 +218,21 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 /* a big, faint beaver sitting behind the greeting */
 .about-hero { position: relative; }
 .about-hero > div { position: relative; z-index: 1; }
-.art-hello { position: absolute; top: -56px; right: -70px; width: 380px; opacity: 0.15; pointer-events: none; -webkit-mask-image: linear-gradient(#000 50%, transparent 82%); mask-image: linear-gradient(#000 50%, transparent 82%); }
+.art-hello { position: absolute; top: -48px; right: -40px; width: 360px; opacity: 0.15; pointer-events: none; -webkit-mask-image: linear-gradient(#000 50%, transparent 82%); mask-image: linear-gradient(#000 50%, transparent 82%); }
 .h2-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .h2-row h2 { margin-bottom: 16px; }
 .art-trunk { width: 92px; margin: -40px 8px -6px 0; }
 /* the beaver bites the top edge of the token chart; about.js plays it when the chart scrolls in */
-.tokens .stat { padding-right: calc(var(--cw) + 8px); }
+.tokens .stat { padding-right: calc(var(--cw) + 24px); }
 .tokens { --cw: 170px; }
 .chart { position: relative; }
-.chomp { position: absolute; z-index: 3; right: 10px; top: calc(var(--cw) * -0.6); width: var(--cw); transform-origin: 50% 100%; pointer-events: none; }
-.bites { position: absolute; z-index: 2; top: -15px; right: calc(var(--cw) * 0.93); width: 66px; height: 30px; transform-origin: 50% 0;
+/* the art's ledge sits 47% down the image and its teeth at the middle: ledge on the card's top edge */
+.chomp { position: absolute; z-index: 3; right: 18px; top: calc(var(--cw) * -0.47 - 1px); width: var(--cw); transform-origin: 50% 47%; pointer-events: none; }
+.bites { position: absolute; z-index: 2; top: -15px; right: calc(18px + var(--cw) * 0.5 - 33px); width: 66px; height: 30px; transform-origin: 50% 0;
   background: radial-gradient(circle at 11px 15px, var(--bg) 11px, transparent 11.5px), radial-gradient(circle at 33px 15px, var(--bg) 14px, transparent 14.5px), radial-gradient(circle at 55px 15px, var(--bg) 10px, transparent 10.5px); }
-.crack { position: absolute; z-index: 1; top: 8px; right: calc(var(--cw) * 0.93 + 18px); width: 220px; height: 120px; overflow: visible; pointer-events: none; }
+.crack { position: absolute; z-index: 1; top: 0; right: calc(4px + var(--cw) * 0.5); width: 220px; height: 120px; overflow: visible; pointer-events: none; }
 .crack path { fill: none; stroke: rgba(241, 244, 247, 0.32); stroke-width: 1.4; stroke-linejoin: bevel; stroke-dasharray: 160; stroke-dashoffset: 0; }
-.crumbs { position: absolute; z-index: 2; top: 0; right: calc(var(--cw) * 0.93 + 33px); width: 0; height: 0; }
+.crumbs { position: absolute; z-index: 2; top: 0; right: calc(18px + var(--cw) * 0.5); width: 0; height: 0; }
 .crumbs i { position: absolute; width: 7px; height: 5px; background: var(--raise); border: 1px solid var(--line); opacity: 0; }
 .bar { transition: width 0.9s cubic-bezier(0.3, 0.7, 0.2, 1) 0.1s; }
 .chart.armed .chomp { opacity: 0; transform: translateY(36px); }
