@@ -6,13 +6,14 @@ const $ = (id) => document.getElementById(id);
 // "device": nothing is uploaded.
 const mode = () => document.querySelector('input[name="mode"]:checked').value;
 const MODE_HELP = {
-  standard: "Converts in your browser. Only scanned or multi-column pages go to the GPU.",
-  best: "Every PDF page goes through the GPU: better tables, formulas and reading order. Slower; up to 50 pages.",
-  device: "Nothing leaves your device. Scanned pages come out empty.",
+  standard: () => "Converts in your browser. Only scanned or multi-column pages go to the GPU.",
+  best: () => `Every PDF page goes through the GPU: better tables, formulas and reading order. Slower; up to ${state.maxPages} pages.`,
+  device: () => "Nothing leaves your device. Scanned pages come out empty.",
 };
 // doneFor: the inputs of the last complete run; Convert stays off until files or options change,
 // so a stray click does not convert (and upload) everything again. abort: the running run's stop.
-const state = { items: [], workerOnline: false, maxMb: 50, busy: false, results: [], md: "", doneFor: null, abort: null };
+// maxPages: GPU pages per file (the gateway's limit, or a friend code's); friend: that code.
+const state = { items: [], workerOnline: false, maxMb: 50, maxPages: 50, friend: "", busy: false, results: [], md: "", doneFor: null, abort: null };
 
 // --- worker status -----------------------------------------------------
 async function refreshStatus() {
@@ -20,17 +21,18 @@ async function refreshStatus() {
     const s = await (await fetch("/api/status", { cache: "no-store" })).json();
     state.workerOnline = !!s.worker_online;
     state.maxMb = s.max_upload_mb || state.maxMb;
+    if (!state.friend) state.maxPages = s.max_gpu_pages || state.maxPages;
   } catch {
     state.workerOnline = false;
   }
   $("status").dataset.state = state.workerOnline ? "online" : "offline";
   $("status-text").textContent = state.workerOnline ? "GPU ONLINE" : "GPU RESTING";
   renderRoute();
+  renderMode();
 }
 
 // Every file converts in the browser first. A PDF goes to the GPU only for pages the browser could
-// not read (scans), or for every page with "Best quality". Matches worker MDB_MAX_GPU_PAGES.
-const GPU_MAX_PAGES = 50;
+// not read (scans), or for every page with "Best quality", up to state.maxPages per file.
 const canUseGpu = (item) => item.kind === "pdf" && state.workerOnline && mode() !== "device" && item.file.size <= state.maxMb * 1048576;
 
 function renderRoute() {
@@ -59,9 +61,57 @@ function renderRun() {
   if (!state.busy) $("stop").disabled = false;
 }
 
-const renderMode = () => { $("mode-help").textContent = MODE_HELP[mode()]; };
+function renderMode() {
+  $("mode-help").textContent = MODE_HELP[mode()]();
+  $("best-limit").textContent = `≤${state.maxPages} pages`;
+}
 for (const r of document.querySelectorAll('input[name="mode"]')) r.addEventListener("change", () => { renderMode(); renderRoute(); renderRun(); });
 renderMode();
+// --- friend code: the owner hands these out; it raises the GPU page limit -------------------
+const store = {
+  get: () => { try { return localStorage.getItem("mdb-friend") || ""; } catch { return ""; } },
+  set: (v) => { try { v ? localStorage.setItem("mdb-friend", v) : localStorage.removeItem("mdb-friend"); } catch {} },
+};
+
+function renderFriend(message = "") {
+  $("friend-form").hidden = !!state.friend;
+  $("friend-on").hidden = !state.friend;
+  $("friend-text").textContent = `Friend code on · GPU up to ${state.maxPages} pages per file`;
+  $("friend-msg").hidden = !message;
+  $("friend-msg").textContent = message;
+  renderMode();
+}
+
+async function applyFriend(code, quiet = false) {
+  let r;
+  try { r = await fetch("/api/friend", { method: "POST", headers: { "X-Friend-Code": code } }); }
+  catch { if (!quiet) renderFriend("Couldn't reach the server. Try again."); return; }
+  if (r.ok) {
+    state.friend = code;
+    state.maxPages = (await r.json()).max_gpu_pages;
+    store.set(code);
+    renderFriend();
+  } else {
+    store.set("");
+    if (!quiet) renderFriend(r.status === 429 ? "Too many tries. Wait a while and try again." : "That code doesn't work.");
+  }
+}
+
+$("friend-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const code = $("friend-code").value.trim();
+  if (code) applyFriend(code);
+});
+$("friend-off").addEventListener("click", () => {
+  state.friend = "";
+  state.maxPages = 50;
+  store.set("");
+  $("friend-code").value = "";
+  renderFriend();
+  refreshStatus();
+});
+if (store.get()) applyFriend(store.get(), true); // a code saved earlier: check it is still valid
+
 // Output options only re-render the text; nothing is converted again.
 for (const el of document.querySelectorAll(".output-opt")) el.addEventListener("change", () => { if (state.results.length) renderOutput(); });
 
@@ -189,7 +239,8 @@ async function convertServer(item, label, mode, pages, pageCount, signal) {
   form.append("file", item.file);
   form.append("mode", mode);
   if (pages) form.append("pages", pages.join(","));
-  const r = await fetch("/api/jobs", { method: "POST", body: form, signal });
+  const headers = state.friend ? { "X-Friend-Code": state.friend } : {};
+  const r = await fetch("/api/jobs", { method: "POST", body: form, headers, signal });
   if (!r.ok) {
     const err = new Error((await r.json().catch(() => ({}))).detail || `http_${r.status}`);
     err.fallback = [429, 502, 503, 504].includes(r.status);
@@ -237,7 +288,7 @@ function replacePages(local, gpu) {
 
 // Returns { markdown, gpu, empty, layout } where gpu is "unneeded", "done", or why the pages the
 // browser couldn't read stayed that way: "offline" (no worker / Device only), "too_big" (over the
-// upload limit), "too_many" (over GPU_MAX_PAGES) or "failed". empty/layout list those pages.
+// upload limit), "too_many" (over state.maxPages) or "failed". empty/layout list those pages.
 async function convert(item, label, onDraft, signal) {
   const local = await convertLocal(item, label, signal);
   if (item.kind !== "pdf") return { markdown: local, gpu: "unneeded" };
@@ -249,12 +300,12 @@ async function convert(item, label, onDraft, signal) {
   const layout = all.filter((n) => pages.get(n).endsWith(NEEDS_GPU));
   const scanned = [...empty, ...layout];
   // Best quality redoes every page, unless that is over the GPU limit: then only the scans.
-  const best = mode() === "best" && all.length <= GPU_MAX_PAGES;
+  const best = mode() === "best" && all.length <= state.maxPages;
   const target = best ? all : scanned;
   const missed = (why) => ({ markdown: local, gpu: scanned.length ? why : "unneeded", empty, layout });
   if (!target.length) return { markdown: local, gpu: "unneeded" };
   if (!canUseGpu(item)) return missed(state.workerOnline && mode() !== "device" ? "too_big" : "offline");
-  if (target.length > GPU_MAX_PAGES) return missed("too_many");
+  if (target.length > state.maxPages) return missed("too_many");
   onDraft(local);
   try {
     const gpu = await convertServer(item, label, best ? "precise" : "fast", best ? null : target, target.length, signal);
@@ -307,7 +358,7 @@ const count = (n, what) => `${n} ${what}${n > 1 ? "s" : ""}`;
 const WHY = {
   offline: () => (mode() === "device" ? "Device only is on, so they weren't sent to the GPU." : "The GPU is resting right now; try again later."),
   too_big: () => `The file is over ${state.maxMb} MB, the most the GPU accepts.`,
-  too_many: () => `That's more than the ${GPU_MAX_PAGES} pages the GPU takes per file.`,
+  too_many: () => `That's more than the ${state.maxPages} pages the GPU takes per file.`,
   failed: () => "The GPU couldn't finish them; try again.",
 };
 

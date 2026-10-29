@@ -16,7 +16,16 @@ class Settings:
     jobs_per_ip_per_hour: int
     result_ttl_sec: int
     job_timeout_sec: int
+    max_gpu_pages: int = 50
+    friend_max_pages: int = 300
+    friend_codes: tuple[tuple[str, str], ...] = ()  # (name, code): codes the owner hands to friends
     worker_online_window_sec: int = 45
+
+
+def _friend_codes(raw: str) -> tuple[tuple[str, str], ...]:
+    """MDB_FRIEND_CODES="alice:code1,bob:code2". Codes under 8 characters are ignored."""
+    pairs = (item.split(":", 1) for item in raw.split(",") if ":" in item)
+    return tuple((name.strip(), code.strip()) for name, code in pairs if len(code.strip()) >= 8)
 
 
 def load_settings() -> Settings:
@@ -33,4 +42,7 @@ def load_settings() -> Settings:
         jobs_per_ip_per_hour=_int("MDB_JOBS_PER_IP_PER_HOUR", 30),
         result_ttl_sec=_int("MDB_RESULT_TTL_SEC", 600),
         job_timeout_sec=_int("MDB_JOB_TIMEOUT_SEC", 900),
+        max_gpu_pages=_int("MDB_MAX_GPU_PAGES", 50),
+        friend_max_pages=_int("MDB_FRIEND_MAX_PAGES", 300),
+        friend_codes=_friend_codes(os.environ.get("MDB_FRIEND_CODES", "")),
     )

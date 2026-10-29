@@ -21,9 +21,10 @@ NAME = "mineru"
 API = os.environ.get("MDB_MINERU_URL", "http://127.0.0.1:8010").rstrip("/")
 TIERS = {"fast": "standard", "precise": "advanced"}
 # The GPU is a single home card shared with other work; long documents would hold it for many
-# minutes per job. Larger files still convert in the browser.
+# minutes per job. Larger files still convert in the browser. The gateway may raise the limit per
+# job (friend codes); this is the default when it does not say.
 MAX_PAGES = int(os.environ.get("MDB_MAX_GPU_PAGES", 50))
-WAIT_SECONDS = 900
+WAIT_SECONDS = 900  # at least this long; long jobs get 6 s a page
 SKIP_BLOCKS = {"header", "footer", "page_number"}
 
 
@@ -57,9 +58,9 @@ def _page_markdown(page: dict) -> str:
     return "\n\n".join(p for p in parts if p)
 
 
-def _result(client: httpx.Client, resp: httpx.Response) -> dict:
+def _result(client: httpx.Client, resp: httpx.Response, wait: float) -> dict:
     """file_parse answers 200 when done, or 202 if its own wait ran out; then poll the task."""
-    deadline = time.monotonic() + WAIT_SECONDS
+    deadline = time.monotonic() + wait
     body = resp.json()
     while resp.status_code == 202:
         if time.monotonic() > deadline:
@@ -72,7 +73,8 @@ def _result(client: httpx.Client, resp: httpx.Response) -> dict:
     return body
 
 
-def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None) -> str:
+def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None,
+            max_pages: int | None = None) -> str:
     if kind != "pdf":
         raise ValueError("unsupported_kind")
     pdf = pdfium.PdfDocument(str(path))
@@ -81,8 +83,10 @@ def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None) ->
     finally:
         pdf.close()
     pages = sorted({p for p in pages if 0 < p <= total}) if pages else None
-    if len(pages or range(total)) > MAX_PAGES:
+    count = len(pages or range(total))
+    if count > (max_pages or MAX_PAGES):
         raise ValueError("too_many_pages")
+    wait = max(WAIT_SECONDS, count * 6)
     source = {"source": {"type": "inline", "name": f"input.{kind}",
                          "data": base64.b64encode(path.read_bytes()).decode()}}
     if pages:
@@ -92,12 +96,12 @@ def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None) ->
         "tier": TIERS.get(mode, "standard"),
         "output_formats": ["structured_content"],
     }
-    with httpx.Client(base_url=API, timeout=httpx.Timeout(WAIT_SECONDS, connect=10)) as client:
+    with httpx.Client(base_url=API, timeout=httpx.Timeout(wait, connect=10)) as client:
         try:
             resp = client.post("/v1/file_parse", json=request)
         except httpx.ConnectError:
             raise ValueError("engine_offline") from None
-        body = _result(client, resp)
+        body = _result(client, resp, wait)
         file = body["files"][0]
         try:
             if file.get("status") not in ("completed", None) or file.get("error"):

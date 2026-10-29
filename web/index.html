@@ -63,7 +63,7 @@
           <p class="label" id="mode-label">Mode</p>
           <div class="seg" role="radiogroup" aria-labelledby="mode-label">
             <label><input type="radio" name="mode" value="standard" checked><span><strong>Standard</strong><small>fast</small></span></label>
-            <label><input type="radio" name="mode" value="best"><span><strong>Best quality</strong><small>≤50 pages</small></span></label>
+            <label><input type="radio" name="mode" value="best"><span><strong>Best quality</strong><small id="best-limit">≤50 pages</small></span></label>
             <label><input type="radio" name="mode" value="device"><span><strong>Device only</strong><small>no upload</small></span></label>
           </div>
           <p id="mode-help" class="help"></p>
@@ -93,6 +93,16 @@
               <span id="tip-source" class="tip-text" role="tooltip">Starts the file with its name and page count. Handy when you keep many files in one place.</span>
             </div>
           </div>
+        </div>
+
+        <div class="group friend">
+          <p class="label" id="friend-label">Friend code</p>
+          <form id="friend-form" class="friend-form" aria-labelledby="friend-label">
+            <input id="friend-code" type="text" autocomplete="off" spellcheck="false" placeholder="Got one from the owner?">
+            <button class="btn" type="submit">Apply</button>
+          </form>
+          <p id="friend-on" class="friend-on" hidden><span id="friend-text"></span> <button id="friend-off" type="button" class="linkish">Remove</button></p>
+          <p id="friend-msg" class="help" hidden></p>
         </div>
       </div>
 

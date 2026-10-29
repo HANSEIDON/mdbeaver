@@ -131,6 +131,12 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .tip:hover, .tip:focus-visible { color: var(--accent); border-color: var(--accent); }
 .tip-text { position: absolute; left: 0; top: calc(100% + 8px); z-index: 4; width: max-content; max-width: min(320px, 100%); padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--sunk); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); font-size: 13px; line-height: 1.45; color: var(--ink-2); opacity: 0; visibility: hidden; transform: translateY(-3px); transition: opacity 0.15s, transform 0.15s, visibility 0.15s; pointer-events: none; }
 .tip:hover + .tip-text, .tip:focus + .tip-text { opacity: 1; visibility: visible; transform: none; }
+.friend-form { display: flex; gap: 8px; max-width: 360px; }
+.friend-form input { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--sunk); color: var(--ink); font: 13px var(--mono); }
+.friend-form input:focus { outline: none; border-color: var(--accent); }
+.friend-on { margin: 0; font-size: 13px; color: var(--ok); }
+.linkish { padding: 0; border: 0; background: none; color: var(--ink-3); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.linkish:hover { color: var(--accent); }
 .check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
 .check input { margin: 4px 0 0; width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
 .check small { font-size: 13px; color: var(--ink-3); }

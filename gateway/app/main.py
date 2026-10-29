@@ -2,6 +2,8 @@ import asyncio
 import logging
 import re
 import secrets
+import time
+from collections import deque
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
@@ -44,6 +46,30 @@ def client_ip(request: Request) -> str:
     return request.headers.get("x-real-ip") or (request.client.host if request.client else "unknown")
 
 
+def friend_name(code: str) -> str | None:
+    """Name of the friend code sent in X-Friend-Code, if it is one of ours."""
+    code = code.strip()
+    if not code:
+        return None
+    match = None
+    for name, known in settings.friend_codes:  # compare against every code: no early exit
+        if secrets.compare_digest(code.encode(), known.encode()):
+            match = name
+    return match
+
+
+_bad_codes: dict[str, deque] = {}
+
+
+def code_attempt_allowed(ip: str) -> bool:
+    """At most 10 wrong friend codes per IP per hour."""
+    now = time.time()
+    misses = _bad_codes.setdefault(ip, deque())
+    while misses and now - misses[0] > 3600:
+        misses.popleft()
+    return len(misses) < 10
+
+
 def sniff_kind(head: bytes) -> str | None:
     if head.startswith(b"%PDF-"):
         return "pdf"
@@ -57,7 +83,20 @@ def status():
         "worker_online": store.worker_online(),
         "queue_length": len(store.queued()),
         "max_upload_mb": settings.max_upload_bytes // 1_048_576,
+        "max_gpu_pages": settings.max_gpu_pages,
     }
+
+
+@app.post("/api/friend")
+def check_friend(request: Request):
+    """Lets the page check a friend code before it is used; answers with the page limit it unlocks."""
+    ip = client_ip(request)
+    if not code_attempt_allowed(ip):
+        raise HTTPException(429, "too_many_attempts")
+    if not friend_name(request.headers.get("x-friend-code", "")):
+        _bad_codes[ip].append(time.time())
+        raise HTTPException(403, "unknown_code")
+    return {"max_gpu_pages": settings.friend_max_pages}
 
 
 @app.post("/api/jobs", status_code=202)
@@ -95,9 +134,12 @@ async def create_job(request: Request, file: UploadFile = File(...), mode: str =
         path.unlink(missing_ok=True)
         raise
 
-    job = Job(id=job_id, kind=kind, mode=mode, size=size, path=path, ip=ip, pages=pages)
+    friend = friend_name(request.headers.get("x-friend-code", "")) or ""
+    max_pages = settings.friend_max_pages if friend else settings.max_gpu_pages
+    job = Job(id=job_id, kind=kind, mode=mode, size=size, path=path, ip=ip, pages=pages,
+              max_pages=max_pages, friend=friend)
     await store.add(job)
-    log.info("job %s queued kind=%s size=%d", job_id, kind, size)
+    log.info("job %s queued kind=%s size=%d%s", job_id, kind, size, f" friend={friend}" if friend else "")
     return {"id": job_id, "position": store.position(job)}
 
 
@@ -148,7 +190,8 @@ async def worker_claim():
     job = await store.claim(wait_sec=20)
     if not job:
         return Response(status_code=204)
-    return {"id": job.id, "kind": job.kind, "mode": job.mode, "size": job.size, "pages": job.pages}
+    return {"id": job.id, "kind": job.kind, "mode": job.mode, "size": job.size, "pages": job.pages,
+            "max_pages": job.max_pages}
 
 
 @app.get("/api/worker/jobs/{job_id}/file", dependencies=[Depends(require_worker)])

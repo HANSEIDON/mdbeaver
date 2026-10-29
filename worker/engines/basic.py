@@ -21,12 +21,13 @@ def _clean(text: str) -> str:
     return text.strip()
 
 
-def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None) -> str:
+def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None,
+            max_pages: int | None = None) -> str:
     if kind != "pdf":
         raise ValueError("unsupported_kind")
     pdf = pdfium.PdfDocument(str(path))
     try:
-        if len(pdf) > MAX_PAGES:
+        if len(pdf) > MAX_PAGES:  # no GPU here: its own limit applies, not the per-job GPU one
             raise ValueError("too_many_pages")
         parts = []
         for i in (p - 1 for p in pages if 0 < p <= len(pdf)) if pages else range(len(pdf)):

@@ -24,6 +24,8 @@ class Job:
     path: Path
     ip: str
     pages: str = ""  # "1,4,5": convert only these pages (the browser already has the rest); "" = all
+    max_pages: int = 50  # GPU page limit for this job; higher with a friend code
+    friend: str = ""  # name of the friend code used, for the log
     created: float = field(default_factory=time.time)
     status: str = QUEUED
     started: float | None = None
@@ -101,6 +103,10 @@ class JobStore:
                 except asyncio.TimeoutError:
                     return None
 
+    def timeout(self, job: Job) -> float:
+        # Friend jobs may run many more pages, so they get proportionally longer.
+        return self.s.job_timeout_sec * max(1.0, job.max_pages / self.s.max_gpu_pages)
+
     def finish(self, job: Job, result: str | None = None, error: str | None = None) -> None:
         job.status = FAILED if error else DONE
         job.result, job.error, job.finished = result, error, time.time()
@@ -110,11 +116,11 @@ class JobStore:
     def sweep(self) -> None:
         now = time.time()
         for job in list(self.jobs.values()):
-            if job.status == RUNNING and now - (job.started or now) > self.s.job_timeout_sec:
+            if job.status == RUNNING and now - (job.started or now) > self.timeout(job):
                 self.finish(job, error="timeout")
             elif job.status in (DONE, FAILED) and now - (job.finished or now) > self.s.result_ttl_sec:
                 self.remove(job.id)
-            elif job.status == QUEUED and now - job.created > self.s.job_timeout_sec * 2:
+            elif job.status == QUEUED and now - job.created > self.s.job_timeout_sec * 4:
                 self.finish(job, error="expired")
             elif job.status == QUEUED and not self.worker_online():
                 # Nobody will pick it up; fail now so the browser converts it locally instead.
