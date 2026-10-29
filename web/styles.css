@@ -60,6 +60,10 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: calc(100vh - var(--header)); }
 .pane { min-width: 0; }
 .source { padding: 24px 28px 32px; border-right: 1px solid var(--line); }
+.intro { margin: 4px 0 28px; }
+.intro h1 { margin: 0; font: 600 clamp(22px, 2.1vw, 28px)/1.25 var(--sans); letter-spacing: -0.01em; }
+.intro h1 em { font-style: normal; color: var(--accent); }
+.langs { margin: 8px 0 0; font: 12px var(--mono); letter-spacing: 0.04em; color: var(--ink-3); }
 .panel { background: var(--panel); display: flex; flex-direction: column; height: calc(100vh - var(--header)); position: sticky; top: var(--header); }
 
 /* upload */
@@ -136,16 +140,12 @@ code { font: 0.92em var(--mono); color: var(--ink-2); }
 .code .l::before { counter-increment: ln; content: counter(ln); position: absolute; left: 0; width: var(--gw); padding-right: 12px; box-sizing: border-box; text-align: right; color: #4e6884; }
 .code .l:hover { background: rgba(255, 255, 255, 0.025); }
 .code .l:hover::before { color: var(--ink-2); }
-.c-p { color: #5f7c99; }
+/* two tones only: yellow headings, everything structural dimmed */
+.c-p, .c-tag, .c-page, .c-fig, .c-comment { color: #6f8aa6; }
 .c-h { color: var(--accent); font-weight: 500; }
 .c-strong { color: #fff; font-weight: 500; }
-.c-ic { color: #f0b27a; }
-.c-math { color: #c5abf2; }
-.c-page { color: var(--ok); }
-.c-fig, .c-comment { color: #7d95ad; font-style: italic; }
-.c-tag { color: #7fb4e8; }
-.c-fence { color: #b5c3d1; }
-.c-quote { color: var(--ink-3); font-style: italic; }
+.c-ic, .c-math, .c-fence { color: #aebdcc; }
+.c-quote { color: var(--ink-3); }
 .editor-foot { display: flex; justify-content: space-between; gap: 12px; padding: 5px 14px; background: var(--chrome); border-top: 1px solid var(--line); font: 11.5px var(--mono); color: var(--ink-3); }
 
 /* small working beaver, bottom of the panel */
