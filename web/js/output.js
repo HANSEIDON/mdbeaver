@@ -1,6 +1,8 @@
 // Token-minimal Markdown. Every conversion path (browser or GPU worker) runs
 // through optimize(), so the output style is decided in exactly one place.
 // Converters emit `<!-- page N -->` markers; they become `[p.N]` or disappear.
+// They mark figures with `<!-- figure -->` or `<!-- figure: caption -->`; the image itself is not
+// in the text, so the line always names its page and lets the AI ask the user for that image.
 
 const INVISIBLE = /[­​-‍⁠﻿]/g;
 const ODD_SPACES = /[  -   　]/g;
@@ -41,9 +43,15 @@ export function optimize(markdown, { keepPages = false } = {}) {
 
   const out = [];
   let prev = null;
+  let pageNo = null;
   for (let line of md.split("\n")) {
     const page = line.match(/^<!-- page (\d+) -->$/);
-    if (page) { if (keepPages) out.push(`[p.${page[1]}]`); continue; }
+    if (page) { pageNo = page[1]; if (keepPages) out.push(`[p.${pageNo}]`); continue; }
+    const figure = line.trim().match(/^<!-- figure(?::\s*(.*?))? -->$/);
+    if (figure) {
+      const where = pageNo ? `, p.${pageNo}` : "";
+      line = `[Figure${where}${figure[1] ? `: ${figure[1]}` : ""} — image not included]`;
+    }
     if (SCANNED.test(line.trim())) line = "[scanned page: no text layer]";
     if (DECORATION.test(line) || /^#{1,6}\s*$/.test(line)) continue;
     line = line.replace(BULLET, "$1- ");

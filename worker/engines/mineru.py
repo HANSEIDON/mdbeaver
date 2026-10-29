@@ -2,9 +2,9 @@
 
 The API runs in WSL (worker/mineru-server.sh) and the worker reaches it over localhost.
 Markdown is rebuilt from MinerU's per-page `structured_content` blocks so every page gets a
-`<!-- page N -->` marker; MinerU's own markdown has no page boundaries. Images and charts keep
-only their captions (base64 image data would multiply the token count ~58x, see
-bench/results/engines-2026-10-29.md). Final formatting is left to web/js/output.js.
+`<!-- page N -->` marker; MinerU's own markdown has no page boundaries. Images and charts become a
+`<!-- figure: caption -->` marker plus whatever MinerU read from them, never base64 image data
+(~58x the tokens, see bench/results/engines-2026-10-29.md). Final formatting is left to web/js/output.js.
 
 MinerU's licence requires services built on it to say so publicly (attribution).
 """
@@ -41,7 +41,13 @@ def _render(block: dict) -> str:
         return f"{'#' * min(block.get('level') or 1, 6)} {content}"
     if kind == "equation":
         return f"$$\n{content}\n$$"
-    if kind in ("table", "code", "image", "chart"):
+    if kind in ("image", "chart"):
+        # The picture itself is not in the text: leave a marker (output.js adds the page) so the AI
+        # knows a figure was here; whatever MinerU read from it (table, Mermaid, description) follows.
+        caption = " ".join(_captions(block)).replace("--", "-").replace("\n", " ")
+        marker = f"<!-- figure: {caption} -->" if caption else "<!-- figure -->"
+        return "\n\n".join([marker, *([content] if content else []), *_footnotes(block)])
+    if kind in ("table", "code"):
         return "\n\n".join([*_captions(block), *([content] if content else []), *_footnotes(block)])
     return content
 
