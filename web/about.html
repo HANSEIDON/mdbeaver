@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body class="about-page">
   <header class="top">
     <a class="brand" href="/" aria-label="mdbeaver home">
       <img class="logo" src="/logo.svg" alt="" width="30" height="30">
@@ -24,14 +24,17 @@
 
   <main class="about">
     <section class="about-hero">
+      <div>
       <p class="label">About</p>
       <h1>Hi. I'm the beaver.</h1>
       <p class="lead">I chew PDFs, Word files and slides into Markdown an AI can actually digest. I keep the headings, tables and formulas, and spit out the page numbers, running headers and other wood chips — so the same document costs fewer tokens.</p>
       <p class="lead">It's free. I work for sticks.</p>
+      </div>
+      <img class="art art-wave" src="/about-wave.webp" alt="" width="360" height="293">
     </section>
 
     <section>
-      <h2>How I work</h2>
+      <div class="h2-row"><h2>How I work</h2><img class="art art-trunk" src="/about-trunk.webp" alt="" width="300" height="343" loading="lazy"></div>
       <ol class="logs">
         <li><span class="log-n">1</span><div><strong>Your browser takes the first bite.</strong> Text PDFs, Word and PowerPoint are converted on your device and never leave it.</div></li>
         <li><span class="log-n">2</span><div><strong>The tough bits go to my GPU.</strong> Scanned pages, two-column layouts and big tables are read on a GPU. Pick Best quality and every page goes there.</div></li>
@@ -39,7 +42,8 @@
       </ol>
     </section>
 
-    <section>
+    <section class="tokens">
+      <img class="art art-peek" src="/about-peek.webp" alt="" width="320" height="319" loading="lazy">
       <h2>Fewer tokens, nearly the same answers</h2>
       <p class="stat"><span class="stat-big">−46%</span><span class="stat-text">tokens compared with handing the AI your pages as images, at 94% vs 98% correct answers.</span></p>
 
@@ -92,11 +96,12 @@
         <li>The web server keeps standard access logs (IP address, time, page) for 14 days.</li>
       </ul>
       <p class="fine">A full privacy policy and terms of use are on the way.</p>
+      <img class="art art-lying" src="/about-lying.webp" alt="" width="520" height="200" loading="lazy">
     </section>
 
     <section>
       <h2>Credits</h2>
-      <p>Server-side PDF conversion uses <a href="https://github.com/opendatalab/MinerU" target="_blank" rel="noopener">MinerU</a>. In-browser conversion uses <a href="https://mozilla.github.io/pdf.js/" target="_blank" rel="noopener">pdf.js</a> and <a href="https://stuk.github.io/jszip/" target="_blank" rel="noopener">JSZip</a>. Set in IBM Plex.</p>
+      <p>Server-side PDF conversion uses <a href="https://github.com/opendatalab/MinerU" target="_blank" rel="noopener">MinerU</a>. In-browser conversion uses <a href="https://mozilla.github.io/pdf.js/" target="_blank" rel="noopener">pdf.js</a> and <a href="https://stuk.github.io/jszip/" target="_blank" rel="noopener">JSZip</a>. Set in Geist.</p>
     </section>
 
     <section class="feed">
@@ -105,6 +110,7 @@
         <h2>Feed the beaver</h2>
         <p>I run on one home GPU and a lot of sticks. If I saved you time, a coffee through WeChat keeps me chewing.</p>
       </div>
+      <img class="art art-coffee" src="/about-coffee.webp" alt="" width="320" height="242" loading="lazy">
     </section>
   </main>
 </body>
