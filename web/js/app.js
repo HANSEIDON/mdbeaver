@@ -13,7 +13,7 @@ const MODE_HELP = {
 // doneFor: the inputs of the last complete run; Convert stays off until files or options change,
 // so a stray click does not convert (and upload) everything again. abort: the running run's stop.
 // maxMb / maxPages: upload size and GPU pages per file (the gateway's, or the coupon's).
-const state = { items: [], workerOnline: false, maxMb: 50, maxPages: 50, coupon: null, busy: false, results: [], md: "", doneFor: null, abort: null };
+const state = { items: [], workerOnline: false, maxMb: 50, maxPages: 50, coupon: null, busy: false, results: [], warnings: [], md: "", doneFor: null, abort: null };
 
 // --- worker status -----------------------------------------------------
 async function refreshStatus() {
@@ -115,6 +115,9 @@ async function applyCoupon(code, quiet = false) {
     state.maxMb = state.coupon.max_upload_mb;
     saved.set(code);
     renderCoupon();
+    // Pages skipped earlier for being over the limit can go now, but only on a new run: say so.
+    if (!state.busy && state.warnings.some((w) => w.gpu === "too_many" || w.gpu === "too_big"))
+      setMessage("Coupon applied. Press Convert again to send the skipped pages to the GPU.");
     return;
   }
   const detail = r.status === 410 ? (await r.json().catch(() => ({}))).detail : r.status;
@@ -382,8 +385,8 @@ const pageList = (ns) => ns.reduce((out, n, i) => {
 const count = (n, what) => `${n} ${what}${n > 1 ? "s" : ""}`;
 const WHY = {
   offline: () => (mode() === "device" ? "Device only is on, so they weren't sent to the GPU." : "The GPU is resting right now; try again later."),
-  too_big: () => `The file is over ${state.maxMb} MB, the most the GPU accepts.`,
-  too_many: () => `That's more than the ${state.maxPages} pages the GPU takes per file.`,
+  too_big: () => `The file is over ${state.maxMb} MB, the most the GPU accepts${state.coupon ? "" : " (a coupon raises this)"}.`,
+  too_many: () => `That's more than the ${state.maxPages} pages the GPU takes per file${state.coupon ? "" : " (a coupon raises this)"}.`,
   failed: () => "The GPU couldn't finish them; try again.",
 };
 
@@ -410,7 +413,7 @@ async function run() {
   setMessage("");
   let failed = 0;
   let halted = false;
-  const warnings = [];
+  const warnings = state.warnings = [];
   renderNotice([]);
   for (const item of state.items) { item.status = ""; item.info = "waiting"; item.progress = 0; }
   renderFiles();
