@@ -1,5 +1,5 @@
 import { renderMarkdown } from "./mdview.js";
-import { estimateTokens, merge, optimize } from "./output.js";
+import { estimateTokens, merge, optimize, pageCount } from "./output.js";
 
 const $ = (id) => document.getElementById(id);
 // "standard": browser first, GPU only for pages it can't read; "best": every PDF page on the GPU;
@@ -62,7 +62,8 @@ function renderRun() {
 const renderMode = () => { $("mode-help").textContent = MODE_HELP[mode()]; };
 for (const r of document.querySelectorAll('input[name="mode"]')) r.addEventListener("change", () => { renderMode(); renderRoute(); renderRun(); });
 renderMode();
-$("keep-pages").addEventListener("change", () => { if (state.results.length) renderOutput(); });
+// Output options only re-render the text; nothing is converted again.
+for (const el of document.querySelectorAll(".output-opt")) el.addEventListener("change", () => { if (state.results.length) renderOutput(); });
 
 // --- file list ---------------------------------------------------------
 const formatSize = (b) => (b < 1048576 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1048576).toFixed(1)} MB`);
@@ -223,14 +224,16 @@ async function convert(item, label, onDraft, signal) {
 // --- run + results -----------------------------------------------------
 const mdName = (name) => name.replace(/\.(pdf|docx|pptx)$/i, ".md");
 
+const outputOptions = () => ({ keepPages: $("keep-pages").checked, figures: $("figures").checked, htmlTables: $("html-tables").checked });
+
 function outputs() {
-  const keepPages = $("keep-pages").checked;
-  return state.results.map((r) => ({ name: r.name, markdown: optimize(r.raw, { keepPages }) }));
+  const opts = outputOptions();
+  return state.results.map((r) => ({ name: r.name, pages: pageCount(r.raw), markdown: optimize(r.raw, opts) }));
 }
 
 function renderOutput() {
   const outs = outputs();
-  const md = merge(outs);
+  const md = merge(outs, { source: $("source").checked });
   state.md = md;
   const lines = renderMarkdown($("output"), md);
   $("result-name").textContent = outs.length === 1 ? mdName(outs[0].name) : `merged-${outs.length}-documents.md`;
@@ -353,7 +356,7 @@ $("download-zip").addEventListener("click", async () => {
     let name = mdName(o.name), n = 2;
     while (used.has(name)) name = mdName(o.name).replace(/\.md$/, `-${n++}.md`);
     used.add(name);
-    zip.file(name, o.markdown);
+    zip.file(name, merge([o], { source: $("source").checked }));
   }
   save(await zip.generateAsync({ type: "blob" }), "mdbeaver-documents.zip");
 });

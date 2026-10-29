@@ -91,6 +91,15 @@ export function mathIn(el) {
 
 // --- tables --------------------------------------------------------------
 // grid: rows of cell strings, merged areas already filled with the origin value.
+// Tables with merged cells go out as HTML so the spans survive; optimize() flattens them to
+// Markdown unless the user keeps merged tables as HTML. `cells` are the origin cells per row.
+export function tableOut(grid, cells) {
+  if (!cells.some((row) => row.some((c) => c.cs > 1 || c.rs > 1))) return gridToMarkdown(grid);
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const td = (c) => `<td${c.cs > 1 ? ` colspan="${c.cs}"` : ""}${c.rs > 1 ? ` rowspan="${c.rs}"` : ""}>${esc(c.text.replace(/\s+/g, " ").trim())}</td>`;
+  return ["<table>", ...cells.map((row) => `<tr>${row.map(td).join("")}</tr>`), "</table>"].join("\n");
+}
+
 export function gridToMarkdown(grid) {
   const width = Math.max(0, ...grid.map((r) => r.length));
   if (!width) return "";

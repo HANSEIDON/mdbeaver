@@ -1,6 +1,6 @@
 // Browser-side DOCX → Markdown. Word files are XML inside a zip: headings come
 // from paragraph styles, lists from numbering, tables and equations are read directly.
-import { NS, gridToMarkdown, kid, kids, omml, openZip, readXml, wval } from "./ooxml.js";
+import { NS, kid, kids, omml, openZip, readXml, tableOut, wval } from "./ooxml.js";
 
 const SKIP = new Set(["delText", "instrText", "rPr", "pPr", "fldChar", "footnoteReference", "endnoteReference"]);
 
@@ -57,9 +57,10 @@ function paragraph(p, levelOf) {
 
 // Word stores horizontal merges as gridSpan (one cell) and vertical ones as vMerge chains.
 function table(tbl) {
-  const grid = [];
+  const grid = [], cells = [], above = [];
   kids(tbl, "w", "tr").forEach((tr, r) => {
     grid[r] = [];
+    cells[r] = [];
     let col = 0;
     for (const tc of kids(tr, "w", "tc")) {
       const tcPr = kid(tc, "w", "tcPr");
@@ -67,10 +68,16 @@ function table(tbl) {
       const vMerge = kid(tcPr, "w", "vMerge");
       const continued = vMerge && (wval(vMerge) ?? "continue") !== "restart";
       const text = continued ? (grid[r - 1]?.[col] ?? "") : [...tc.getElementsByTagNameNS(NS.w, "p")].map(paraText).filter(Boolean).join(" ");
+      if (continued && above[col]) above[col].rs++;
+      else {
+        const cell = { text, cs: span, rs: 1 };
+        cells[r].push(cell);
+        for (let i = 0; i < span; i++) above[col + i] = cell;
+      }
       for (let i = 0; i < span; i++) grid[r][col++] = text;
     }
   });
-  return gridToMarkdown(grid);
+  return tableOut(grid, cells);
 }
 
 function blocks(container, levelOf, out) {

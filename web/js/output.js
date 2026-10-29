@@ -11,9 +11,17 @@ const BULLET = /^(\s*)(?:[-*+]\s+)?[•▪●◦‣∙·▸►■□–]\s+/; //
 const DECORATION = /^\s*[-_=*·•.…~―—–─━═]{3,}\s*$/;
 const SCANNED = /^_\(no text layer — scanned page, needs OCR\)_$/;
 
-function htmlTableToMarkdown(html) {
+// One row per line, only the attributes that carry structure.
+function compactHtmlTable(table) {
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const td = (c) => `<td${c.colSpan > 1 ? ` colspan="${c.colSpan}"` : ""}${c.rowSpan > 1 ? ` rowspan="${c.rowSpan}"` : ""}>${esc(c.textContent.replace(/\s+/g, " ").trim())}</td>`;
+  return ["<table>", ...[...table.rows].map((tr) => `<tr>${[...tr.cells].map(td).join("")}</tr>`), "</table>"].join("\n");
+}
+
+function htmlTableToMarkdown(html, keepMerged) {
   const table = new DOMParser().parseFromString(html, "text/html").querySelector("table");
   if (!table) return html;
+  if (keepMerged && [...table.querySelectorAll("td, th")].some((c) => c.colSpan > 1 || c.rowSpan > 1)) return compactHtmlTable(table);
   const grid = [];
   [...table.rows].forEach((tr, r) => {
     grid[r] ??= [];
@@ -33,7 +41,7 @@ function htmlTableToMarkdown(html) {
   return [row(grid[0]), `|${Array(width).fill("-").join("|")}|`, ...grid.slice(1).map(row)].join("\n");
 }
 
-export function optimize(markdown, { keepPages = false } = {}) {
+export function optimize(markdown, { keepPages = false, figures = true, htmlTables = false } = {}) {
   let md = markdown
     .replace(/\r\n?/g, "\n")
     .replace(INVISIBLE, "")
@@ -45,7 +53,7 @@ export function optimize(markdown, { keepPages = false } = {}) {
     // Chinese/Japanese have no spaces between characters; justified layouts make text extraction
     // insert them ("美 学 理 论"). Hangul is excluded: Korean separates words with spaces.
     .replace(/(?<=[　-〿぀-ヿ一-鿿＀-￯])[ \t]+(?=[　-〿぀-ヿ一-鿿＀-￯])/g, "")
-    .replace(/<table[\s\S]*?<\/table>/gi, htmlTableToMarkdown);
+    .replace(/<table[\s\S]*?<\/table>/gi, (t) => htmlTableToMarkdown(t, htmlTables));
 
   const out = [];
   let prev = null;
@@ -56,6 +64,7 @@ export function optimize(markdown, { keepPages = false } = {}) {
     if (line.trim() === "<!-- needs-gpu -->") continue; // routing hint for app.js, not content
     const figure = line.trim().match(/^<!-- figure(?::\s*(.*?))? -->$/);
     if (figure) {
+      if (!figures) continue;
       const where = pageNo ? `, p.${pageNo}` : "";
       line = `[Figure${where}${figure[1] ? `: ${figure[1]}` : ""} — image not included]`;
     }
@@ -64,7 +73,7 @@ export function optimize(markdown, { keepPages = false } = {}) {
     line = line.replace(BULLET, "$1- ");
     const indent = line.match(/^\s*/)[0];
     line = indent + line.slice(indent.length).replace(/[ \t]+/g, " ").trimEnd();
-    if (line && line === prev && !line.startsWith("|")) continue; // drop exact repeats (e.g. duplicated watermarks), never table rows
+    if (line && line === prev && !/^(\||<tr>)/.test(line)) continue; // drop exact repeats (e.g. duplicated watermarks), never table rows
     out.push(line);
     if (line) prev = line;
   }
@@ -77,10 +86,22 @@ export function optimize(markdown, { keepPages = false } = {}) {
 
 // Several files → one Markdown file. <document> tags keep sources apart cheaply
 // and are a widely recommended way to hand multiple documents to an LLM.
-export function merge(results) {
-  if (results.length === 1) return results[0].markdown;
-  return results.map((r) => `<document name="${r.name.replace(/"/g, "'")}">\n${r.markdown.trim()}\n</document>`).join("\n\n") + "\n";
+// With `source`, a single file starts with front matter (file name, page count) and merged
+// files get a pages attribute; merged files always carry their names.
+export function merge(results, { source = false } = {}) {
+  if (results.length === 1) {
+    const r = results[0];
+    if (!source) return r.markdown;
+    return `---\nsource: ${r.name}\n${r.pages ? `pages: ${r.pages}\n` : ""}---\n\n${r.markdown}`;
+  }
+  return results.map((r) => {
+    const pages = source && r.pages ? ` pages="${r.pages}"` : "";
+    return `<document name="${r.name.replace(/"/g, "'")}"${pages}>\n${r.markdown.trim()}\n</document>`;
+  }).join("\n\n") + "\n";
 }
+
+// Converters mark every page (PDF) or slide (PPTX); DOCX has none, so this is 0.
+export const pageCount = (raw) => Math.max(0, ...[...raw.matchAll(/^<!-- page (\d+) -->$/gm)].map((m) => Number(m[1])));
 
 export function estimateTokens(text) {
   const cjk = (text.match(/[぀-ヿ㐀-鿿가-힯]/g) || []).length;

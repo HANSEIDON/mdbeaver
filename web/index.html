@@ -76,10 +76,28 @@
 
         <div class="group">
           <p class="label">Output</p>
-          <label class="check">
-            <input id="keep-pages" type="checkbox">
-            <span>Keep page numbers<small>Adds <code>[p.12]</code> so the AI can cite pages</small></span>
-          </label>
+          <div class="checks">
+            <div class="opt">
+              <label class="check"><input id="keep-pages" class="output-opt" type="checkbox"><span>Keep page numbers</span></label>
+              <button type="button" class="tip" aria-describedby="tip-pages" aria-label="What this does">?</button>
+              <span id="tip-pages" class="tip-text" role="tooltip">Adds <code>[p.12]</code> at each page break so the AI can cite pages.</span>
+            </div>
+            <div class="opt">
+              <label class="check"><input id="figures" class="output-opt" type="checkbox" checked><span>Mark figures</span></label>
+              <button type="button" class="tip" aria-describedby="tip-figures" aria-label="What this does">?</button>
+              <span id="tip-figures" class="tip-text" role="tooltip">Leaves <code>[Figure, p.3]</code> where an image was, so the AI knows it's there and can ask you for it.</span>
+            </div>
+            <div class="opt">
+              <label class="check"><input id="html-tables" class="output-opt" type="checkbox"><span>Merged-cell tables as HTML</span></label>
+              <button type="button" class="tip" aria-describedby="tip-tables" aria-label="What this does">?</button>
+              <span id="tip-tables" class="tip-text" role="tooltip">Markdown tables can't merge cells, so merged cells get repeated. HTML keeps them as they are. Costs more tokens.</span>
+            </div>
+            <div class="opt">
+              <label class="check"><input id="source" class="output-opt" type="checkbox"><span>Add source info</span></label>
+              <button type="button" class="tip" aria-describedby="tip-source" aria-label="What this does">?</button>
+              <span id="tip-source" class="tip-text" role="tooltip">Starts the file with its name and page count. Handy when you keep many files in one place.</span>
+            </div>
+          </div>
         </div>
       </div>
 

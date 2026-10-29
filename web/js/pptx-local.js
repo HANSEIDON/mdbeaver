@@ -1,6 +1,6 @@
 // Browser-side PPTX → Markdown. Slides are XML inside a zip, so text,
 // tables and equations can be read directly — no OCR or server needed.
-import { NS, attr, gridToMarkdown, kid, kids, omml, openZip, readXml, rels } from "./ooxml.js";
+import { NS, attr, kid, kids, omml, openZip, readXml, rels, tableOut } from "./ooxml.js";
 
 function runText(p) {
   let s = "";
@@ -27,19 +27,21 @@ function paragraphs(txBody, bulleted) {
 
 // PPTX keeps placeholder cells for merges (hMerge/vMerge), so fill them from their origin.
 function table(tbl) {
-  const grid = [];
+  const grid = [], cells = [];
   kids(tbl, "a", "tr").forEach((tr, r) => {
     grid[r] = [];
+    cells[r] = [];
     kids(tr, "a", "tc").forEach((tc, c) => {
       if (tc.hasAttribute("hMerge")) grid[r][c] = grid[r][c - 1];
       else if (tc.hasAttribute("vMerge")) grid[r][c] = grid[r - 1]?.[c];
       else {
         const body = kid(tc, "a", "txBody");
         grid[r][c] = body ? paragraphs(body, false).join(" ") : "";
+        cells[r].push({ text: grid[r][c], cs: Number(attr(tc, "gridSpan")) || 1, rs: Number(attr(tc, "rowSpan")) || 1 });
       }
     });
   });
-  return gridToMarkdown(grid);
+  return tableOut(grid, cells);
 }
 
 function placeholderType(sp) {
