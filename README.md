@@ -5,7 +5,7 @@
 # mdbeaver
 
 **Documents, gnawed down to lean Markdown.**
-PDF, Word, PowerPoint and Hangul (HWP, HWPX) in. AI-ready Markdown out, with fewer tokens.
+Turn PDF, Word, PowerPoint and Hangul (HWP, HWPX) files into Markdown that an AI reads with fewer tokens.
 
 [![Live](https://img.shields.io/badge/live-mdbeaver.com-ffd34e?style=flat-square&labelColor=15273a)](https://mdbeaver.com)
 ![Formats](https://img.shields.io/badge/PDF%20%C2%B7%20DOCX%20%C2%B7%20PPTX%20%C2%B7%20HWP-15273a?style=flat-square)
