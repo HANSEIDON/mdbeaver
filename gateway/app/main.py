@@ -13,11 +13,13 @@ from pydantic import BaseModel, Field
 from .config import load_settings
 from .coupons import Coupons
 from .jobs import DONE, FAILED, RUNNING, Job, JobStore, new_job_id
+from .stats import KINDS, Stats
 
 log = logging.getLogger("mdbeaver.gateway")
 settings = load_settings()
 coupons = Coupons(settings.coupons_file)
 store = JobStore(settings, give_back=coupons.give_back)
+stats = Stats(settings.stats_file)
 
 MAX_MARKDOWN_BYTES = 20 * 1024 * 1024
 ALLOWED_MODES = {"fast", "precise"}
@@ -90,6 +92,37 @@ def check_coupon(request: Request):
     if (state := Coupons.state(c)) != "ok":
         raise HTTPException(410, state)
     return Coupons.public(c)
+
+
+class CountIn(BaseModel):
+    kind: str
+    pages: int = Field(default=0, ge=0, le=100_000)
+    gpu: bool = False
+    ok: bool = True
+
+
+# Counts per IP per day, in memory only, so one visitor can't inflate the totals much.
+_counted: dict[str, int] = {}
+_counted_day = ""
+COUNTS_PER_IP_PER_DAY = 500
+
+
+@app.post("/api/count", status_code=204)
+def count(body: CountIn, request: Request):
+    """One finished file, for the anonymous daily totals (app/stats.py). Nothing identifying is kept."""
+    global _counted_day
+    if body.kind not in KINDS:
+        raise HTTPException(400, "bad_kind")
+    today = time.strftime("%Y-%m-%d", time.gmtime())
+    if today != _counted_day:
+        _counted.clear()
+        _counted_day = today
+    ip = client_ip(request)
+    if _counted.get(ip, 0) >= COUNTS_PER_IP_PER_DAY:
+        return Response(status_code=204)
+    _counted[ip] = _counted.get(ip, 0) + 1
+    stats.add(body.kind, body.pages, body.gpu, body.ok)
+    return Response(status_code=204)
 
 
 @app.post("/api/jobs", status_code=202)

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Anonymous daily conversion totals (installed as /usr/local/bin/mdb-stats by remote-setup.sh):
+#   mdb-stats            last 30 days
+#   mdb-stats --days 7
+# Details: gateway/app/stats.py
+set -euo pipefail
+cd /opt/mdbeaver/gateway
+exec sudo -u mdbeaver env MDB_UPLOAD_DIR=/var/lib/mdbeaver/uploads MDB_STATS_FILE=/var/lib/mdbeaver/stats.json \
+  /opt/mdbeaver/venv/bin/python -m app.stats "$@"

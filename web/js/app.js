@@ -260,6 +260,13 @@ const FAILED = {
   not_hwpx: "not a readable HWPX file",
 };
 
+// One finished file for the anonymous daily totals: kind, pages, whether the GPU helped and
+// whether it worked. No name, no content, no cookie; Device only sends nothing at all.
+function countFile(kind, pages, gpu, ok) {
+  if (mode() === "device") return;
+  fetch("/api/count", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, pages, gpu, ok }), keepalive: true }).catch(() => {});
+}
+
 const stopped = () => new DOMException("stopped", "AbortError");
 
 // The converters report progress per page; Stop takes effect at the next page.
@@ -503,6 +510,7 @@ async function run() {
       if (!state.results.includes(result)) state.results.push(result);
       const tokens = estimateTokens(optimize(markdown));
       item.status = gpu in WHY ? "warn" : "done"; item.info = `done · ${tokens.toLocaleString()} tokens`;
+      countFile(item.kind, pageCount(markdown), gpu === "done", true);
       if (gpu in WHY) { warnings.push({ name: item.file.name, gpu, empty, layout }); renderNotice(warnings); }
       setBar($("working-bar"), (i + 1) / state.items.length);
       showResults();
@@ -513,6 +521,7 @@ async function run() {
         item.info = state.results.includes(result) ? "stopped · browser draft kept" : "stopped";
       } else {
         failed++;
+        countFile(item.kind, 0, false, false);
         item.status = "error"; item.info = `failed (${FAILED[e.message] || e.message || e})`;
       }
     }

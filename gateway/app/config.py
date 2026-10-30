@@ -17,6 +17,7 @@ class Settings:
     result_ttl_sec: int
     job_timeout_sec: int
     coupons_file: Path
+    stats_file: Path
     max_gpu_pages: int = 50  # per file without a coupon
     worker_online_window_sec: int = 45
 
@@ -37,4 +38,5 @@ def load_settings(require_token: bool = True) -> Settings:
         job_timeout_sec=_int("MDB_JOB_TIMEOUT_SEC", 900),
         coupons_file=Path(os.environ.get("MDB_COUPONS_FILE", upload_dir.parent / "coupons.json")),
         max_gpu_pages=_int("MDB_MAX_GPU_PAGES", 50),
+        stats_file=Path(os.environ.get("MDB_STATS_FILE", upload_dir.parent / "stats.json")),
     )

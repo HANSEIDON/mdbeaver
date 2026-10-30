@@ -36,7 +36,7 @@ On our test set an AI answered **94%** of questions correctly from mdbeaver's Ma
 - **Several files at once,** merged into one Markdown file with each wrapped in `<document name="…">`, or downloaded separately as a `.zip`.
 - **Long documents** (up to 1000 pages with a coupon) run on the GPU in 100-page chunks; each chunk shows up as soon as it is done.
 - **Honest about gaps.** Pages that could not be read are listed with their page numbers and the reason.
-- **No accounts, no cookies, no analytics.** Uploads are deleted right after conversion.
+- **No accounts, no cookies, no tracking.** Uploads are deleted right after conversion; the only count kept is an anonymous daily total.
 
 <table>
   <tr>
@@ -167,7 +167,8 @@ One use is one file sent to the GPU, given back if that job fails or is withdraw
 
 ## Privacy
 
-- No accounts, cookies or analytics. The page stores only an applied coupon, in your own browser.
+- No accounts, cookies or tracking. The page stores only an applied coupon, in your own browser.
+- One anonymous tally per day (`gateway/app/stats.py`): files per type, pages, how many used the GPU or failed. No IP address, file name or content goes into it; *Device only* sends nothing. The owner reads it with `mdb-stats`.
 - Files that need the GPU are sent over HTTPS, read, and deleted at once; results are dropped within 10 minutes.
 - The web server keeps standard access logs (IP address, time, page) for 14 days.
 - *Device only* mode uploads nothing at all.

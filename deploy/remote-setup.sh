@@ -45,8 +45,9 @@ sudo find /var/lib/mdbeaver -mindepth 1 -type d -exec chmod 700 {} + 2>/dev/null
 sudo find /var/lib/mdbeaver -type f -exec chmod 600 {} + 2>/dev/null || true
 sudo systemctl restart mdbeaver-gateway
 
-# Coupon management command (coupons live in /var/lib/mdbeaver/coupons.json)
+# Coupon and stats commands (data in /var/lib/mdbeaver)
 sudo install -m 755 "$REL/deploy/mdb-coupons" /usr/local/bin/mdb-coupons
+sudo install -m 755 "$REL/deploy/mdb-stats" /usr/local/bin/mdb-stats
 
 # Nginx
 sudo cp "$REL/deploy/nginx-mdbeaver.conf" /etc/nginx/sites-available/mdbeaver
