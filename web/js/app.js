@@ -53,7 +53,8 @@ function showTab(name) {
 }
 document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
 // What a run depends on; "Keep page numbers" only re-renders the output, so it is not part of it.
-const inputsKey = () => JSON.stringify([state.items.map((it) => [it.file.name, it.file.size, it.file.lastModified]), mode()]);
+// The coupon is: one applied after a run lets the skipped pages go to the GPU.
+const inputsKey = () => JSON.stringify([state.items.map((it) => [it.file.name, it.file.size, it.file.lastModified]), mode(), state.coupon?.code || ""]);
 
 function renderRun() {
   const done = !state.busy && state.items.length > 0 && state.doneFor === inputsKey();
@@ -80,6 +81,7 @@ function renderCoupon(message = "") {
   const c = state.coupon;
   $("coupon-form").hidden = !!c;
   $("coupon-on").hidden = !c;
+  $("coupon-help").hidden = !!c;
   if (c) {
     const uses = c.uses_left === null ? "" : ` · ${count(c.uses_left, "use")} left`;
     $("coupon-text").textContent = `Coupon on · GPU up to ${c.max_gpu_pages} pages, ${c.max_upload_mb} MB per file${uses}${c.expires ? ` · until ${c.expires}` : ""}`;
@@ -88,6 +90,7 @@ function renderCoupon(message = "") {
   $("coupon-msg").textContent = message;
   renderMode();
   renderRoute();
+  renderRun();
 }
 
 const COUPON_ERRORS = {
@@ -416,6 +419,9 @@ const WHY = {
   blocked: () => "The upload didn't go through. A browser extension such as an ad blocker can stop it: try a private window, or allow mdbeaver.com in the extension.",
 };
 
+// Skipped GPU pages that another run of the same inputs might get; too_big / too_many need a coupon.
+const RETRY = new Set(["offline", "failed", "blocked"]);
+
 function renderNotice(warnings) {
   $("notice").hidden = !warnings.length;
   $("notice-list").replaceChildren(...warnings.map((w) => {
@@ -495,10 +501,10 @@ async function run() {
 
   state.busy = false;
   state.abort = null;
-  // Lock Convert only after a clean, complete run; after a stop, failure or skipped GPU pages
-  // the same inputs can be converted again.
-  const clean = !halted && !failed && !warnings.length;
-  state.doneFor = clean ? inputsKey() : null;
+  // Lock Convert once a run has finished: the same inputs would give the same result. A stop, a
+  // failure or a GPU that was out of reach (it may be back later) leaves it on for another try.
+  const retry = halted || failed || warnings.some((w) => RETRY.has(w.gpu) && mode() !== "device");
+  state.doneFor = retry ? null : inputsKey();
   $("working").hidden = true;
   renderFiles();
   if (state.results.length) showResults();
@@ -512,6 +518,50 @@ async function run() {
   setMessage(notes.join(" "), failed > 0);
 }
 $("run").addEventListener("click", run);
+// A reload or a typed address mid-run would lose it: the browser asks first.
+addEventListener("beforeunload", (e) => { if (state.busy) e.preventDefault(); });
+
+// --- About inside this page ------------------------------------------------
+// People open About while a long file converts; leaving the page would drop the run and the
+// results. So About is fetched once and shown in place of the converter, with its own history
+// entry: Back, the logo or "Convert" return to the converter as it was. about.html still works
+// on its own for links and reloads.
+let about = null;
+let appScroll = 0;
+function showAbout(on) {
+  if (on) appScroll = scrollY;
+  document.querySelector("main.split").hidden = on;
+  about.hidden = !on;
+  document.body.classList.toggle("about-page", on);
+  $("to-about").hidden = on;
+  $("to-app").hidden = !on;
+  document.title = on ? "About — mdbeaver" : APP_TITLE;
+  scrollTo(0, on ? 0 : appScroll);
+}
+const APP_TITLE = document.title;
+const plainClick = (e) => !(e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey);
+$("to-about").addEventListener("click", async (e) => {
+  if (!plainClick(e)) return;
+  e.preventDefault();
+  if (!about) {
+    try {
+      const html = await (await fetch("/about.html")).text();
+      about = new DOMParser().parseFromString(html, "text/html").querySelector("main.about");
+      document.querySelector("main.split").after(about);
+      import("/js/about.js"); // the chart's bite, armed once
+    } catch { location.href = "/about.html"; return; }
+  }
+  history.pushState({ about: true }, "", "/about.html");
+  showAbout(true);
+});
+const backToApp = (e) => {
+  if (!about || about.hidden || !plainClick(e)) return;
+  e.preventDefault();
+  history.back();
+};
+$("to-app").addEventListener("click", backToApp);
+document.querySelector(".brand").addEventListener("click", backToApp);
+addEventListener("popstate", () => { if (about) showAbout(!!history.state?.about); });
 $("stop").addEventListener("click", () => {
   state.abort?.abort();
   $("stop").disabled = true; // until the run winds down (at most one page)
