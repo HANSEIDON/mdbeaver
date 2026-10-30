@@ -13,7 +13,7 @@ const MODE_HELP = {
 // doneFor: the inputs of the last complete run; Convert stays off until files or options change,
 // so a stray click does not convert (and upload) everything again. abort: the running run's stop.
 // maxMb / maxPages: upload size and GPU pages per file (the gateway's, or the coupon's).
-const state = { items: [], workerOnline: false, maxMb: 50, maxPages: 50, coupon: null, busy: false, results: [], warnings: [], md: "", doneFor: null, abort: null };
+const state = { items: [], workerOnline: false, maxMb: 50, maxPages: 50, coupon: null, busy: false, restyled: false, results: [], warnings: [], md: "", doneFor: null, abort: null };
 
 // --- worker status -----------------------------------------------------
 async function refreshStatus() {
@@ -47,6 +47,7 @@ function renderRoute() {
 
 // --- tabs and options ---------------------------------------------------
 function showTab(name) {
+  if (name === "results" && state.restyled) { state.restyled = false; renderRun(); }
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.dataset.tab === name));
   $("tab-config").hidden = name !== "config";
   $("tab-results").hidden = name !== "results";
@@ -58,8 +59,9 @@ const inputsKey = () => JSON.stringify([state.items.map((it) => [it.file.name, i
 
 function renderRun() {
   const done = !state.busy && state.items.length > 0 && state.doneFor === inputsKey();
-  $("run").disabled = state.busy || !state.items.length || done;
-  $("run").textContent = state.busy ? "Converting…" : done ? "Converted ✓" : "Convert";
+  const restyle = done && state.restyled;
+  $("run").disabled = state.busy || !state.items.length || (done && !restyle);
+  $("run").textContent = state.busy ? "Converting…" : restyle ? "Update Markdown" : done ? "Converted ✓" : "Convert";
   $("stop").hidden = !state.busy;
   if (!state.busy) $("stop").disabled = false;
 }
@@ -137,8 +139,14 @@ $("coupon-form").addEventListener("submit", (e) => {
 $("coupon-off").addEventListener("click", () => { $("coupon-code").value = ""; dropCoupon(); });
 if (saved.get()) applyCoupon(saved.get(), true); // a coupon saved earlier: check it still works
 
-// Output options only re-render the text; nothing is converted again.
-for (const el of document.querySelectorAll(".output-opt")) el.addEventListener("change", () => { if (state.results.length) renderOutput(); });
+// Output options only re-render the text; nothing is converted again. The text changes at once,
+// but from the Settings tab nobody sees it: after a finished run Convert becomes "Update Markdown",
+// which shows the result (restyled) instead of converting again.
+for (const el of document.querySelectorAll(".output-opt")) el.addEventListener("change", () => {
+  if (!state.results.length) return;
+  renderOutput();
+  if (!state.busy) { state.restyled = true; renderRun(); }
+});
 
 // --- file list ---------------------------------------------------------
 const formatSize = (b) => (b < 1048576 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1048576).toFixed(1)} MB`);
@@ -449,6 +457,8 @@ const SCANNED_NOTE = /\[scanned page: no text layer\]/g;
 
 async function run() {
   if (!state.items.length || state.busy) return;
+  if (state.restyled && state.doneFor === inputsKey()) { showTab("results"); return; }
+  state.restyled = false;
   state.busy = true;
   state.results = [];
   const controller = new AbortController();

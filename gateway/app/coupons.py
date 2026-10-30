@@ -43,8 +43,12 @@ class Coupons:
             return {"coupons": []}
 
     def save(self, data: dict) -> None:
+        # 0600: the codes are secrets, whoever runs this (the service or mdb-coupons).
         tmp = self.path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(data, indent=2), "utf-8")
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(data, indent=2))
+        os.chmod(tmp, 0o600)
         os.replace(tmp, self.path)
 
     @staticmethod

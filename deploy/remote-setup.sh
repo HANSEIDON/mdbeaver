@@ -40,6 +40,9 @@ sudo find /var/www/mdbeaver -type d -exec chmod 755 {} + && sudo find /var/www/m
 sudo cp "$REL/deploy/mdbeaver-gateway.service" /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable mdbeaver-gateway >/dev/null 2>&1
+# Files made before the service had UMask=0077 (it covers new ones).
+sudo find /var/lib/mdbeaver -mindepth 1 -type d -exec chmod 700 {} + 2>/dev/null || true
+sudo find /var/lib/mdbeaver -type f -exec chmod 600 {} + 2>/dev/null || true
 sudo systemctl restart mdbeaver-gateway
 
 # Coupon management command (coupons live in /var/lib/mdbeaver/coupons.json)

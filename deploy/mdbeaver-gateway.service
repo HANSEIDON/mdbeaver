@@ -12,6 +12,9 @@ Restart=always
 RestartSec=3
 
 StateDirectory=mdbeaver
+# Coupons and uploads are for this service only, not for other accounts on the server.
+StateDirectoryMode=0700
+UMask=0077
 NoNewPrivileges=yes
 ProtectSystem=strict
 ProtectHome=yes
