@@ -142,7 +142,7 @@ for (const el of document.querySelectorAll(".output-opt")) el.addEventListener("
 
 // --- file list ---------------------------------------------------------
 const formatSize = (b) => (b < 1048576 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1048576).toFixed(1)} MB`);
-const kindOf = (name) => (name.match(/\.(pdf|docx|pptx)$/i)?.[1] || "").toLowerCase() || null;
+const kindOf = (name) => (name.match(/\.(pdf|docx|pptx|hwpx?)$/i)?.[1] || "").toLowerCase() || null;
 
 function setMessage(text, isError = false) {
   $("message").hidden = !text;
@@ -198,7 +198,7 @@ function addFiles(files) {
     if (state.items.some((it) => it.file.name === file.name && it.file.size === file.size)) continue;
     state.items.push({ file, kind });
   }
-  setMessage(skipped ? `Skipped ${skipped} file${skipped > 1 ? "s" : ""}: only PDF, DOCX and PPTX are supported.` : "", !!skipped);
+  setMessage(skipped ? `Skipped ${skipped} file${skipped > 1 ? "s" : ""}: only PDF, DOCX, PPTX, HWP and HWPX are supported.` : "", !!skipped);
   renderFiles();
 }
 
@@ -240,6 +240,16 @@ const CONVERTERS = {
   pdf: () => import("./pdf-local.js").then((m) => m.pdfToMarkdown),
   docx: () => import("./docx-local.js").then((m) => m.docxToMarkdown),
   pptx: () => import("./pptx-local.js").then((m) => m.pptxToMarkdown),
+  hwp: () => import("./hwp-local.js").then((m) => m.hwpToMarkdown),
+  hwpx: () => import("./hwpx-local.js").then((m) => m.hwpxToMarkdown),
+};
+
+// Why a file could not be read, for the ones a person can do something about.
+const FAILED = {
+  hwp_distribution: "copy-protected HWP: open it in Hangul and save a normal copy",
+  hwp_password: "password-protected HWP: save a copy without the password",
+  not_hwp: "not an HWP file Hangul 5 or later wrote",
+  not_hwpx: "not a readable HWPX file",
 };
 
 const stopped = () => new DOMException("stopped", "AbortError");
@@ -373,7 +383,7 @@ async function convert(item, label, onDraft, signal) {
 }
 
 // --- run + results -----------------------------------------------------
-const mdName = (name) => name.replace(/\.(pdf|docx|pptx)$/i, ".md");
+const mdName = (name) => name.replace(/\.(pdf|docx|pptx|hwpx?)$/i, ".md");
 
 const outputOptions = () => ({ keepPages: $("keep-pages").checked, figures: $("figures").checked, htmlTables: $("html-tables").checked });
 
@@ -493,7 +503,7 @@ async function run() {
         item.info = state.results.includes(result) ? "stopped · browser draft kept" : "stopped";
       } else {
         failed++;
-        item.status = "error"; item.info = `failed (${e.message || e})`;
+        item.status = "error"; item.info = `failed (${FAILED[e.message] || e.message || e})`;
       }
     }
     renderFiles();

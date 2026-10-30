@@ -5,10 +5,10 @@
 # mdbeaver
 
 **Documents, gnawed down to lean Markdown.**
-PDF, Word and PowerPoint in. AI-ready Markdown out, with fewer tokens.
+PDF, Word, PowerPoint and Hangul (HWP, HWPX) in. AI-ready Markdown out, with fewer tokens.
 
 [![Live](https://img.shields.io/badge/live-mdbeaver.com-ffd34e?style=flat-square&labelColor=15273a)](https://mdbeaver.com)
-![Formats](https://img.shields.io/badge/PDF%20%C2%B7%20DOCX%20%C2%B7%20PPTX-15273a?style=flat-square)
+![Formats](https://img.shields.io/badge/PDF%20%C2%B7%20DOCX%20%C2%B7%20PPTX%20%C2%B7%20HWP-15273a?style=flat-square)
 ![Languages](https://img.shields.io/badge/Korean%20%C2%B7%20Chinese%20%C2%B7%20English-15273a?style=flat-square)
 ![Tokens](https://img.shields.io/badge/tokens-%E2%88%9246%25%20vs%20page%20images-ffd34e?style=flat-square&labelColor=15273a)
 
@@ -30,7 +30,7 @@ On our test set an AI answered **94%** of questions correctly from mdbeaver's Ma
 
 ## Features
 
-- **Browser first.** Text PDFs, Word and PowerPoint are converted on your own device and never uploaded.
+- **Browser first.** Text PDFs, Word, PowerPoint and Hangul (HWP, HWPX) are converted on your own device and never uploaded.
 - **GPU only where it helps.** Scanned pages, two-column layouts and big tables go to a GPU running [MinerU](https://github.com/opendatalab/MinerU). *Best quality* sends every page.
 - **Built for AI.** Optional page markers (`[p.12]`) so answers can cite pages, figure markers so the AI knows an image was there, merged-cell tables as HTML, and front matter with the source.
 - **Several files at once,** merged into one Markdown file with each wrapped in `<document name="…">`, or downloaded separately as a `.zip`.
@@ -69,7 +69,7 @@ flowchart LR
 
 | Path | What | Runs on |
 |---|---|---|
-| `web/` | Static site, no framework. PDF (pdf.js), DOCX and PPTX conversion in the browser | Nginx |
+| `web/` | Static site, no framework. PDF (pdf.js), DOCX, PPTX, HWP and HWPX conversion in the browser | Nginx |
 | `gateway/` | FastAPI: uploads, job queue, coupons, worker API | Server (systemd, localhost) |
 | `worker/` | Pulls jobs, converts with a pluggable engine (`basic` CPU or `mineru` GPU) | Home GPU PC |
 | `deploy/` | Nginx config, systemd unit, deploy script, coupon tool | — |
