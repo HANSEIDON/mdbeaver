@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Deploys gateway + web to the Oracle server. Run from the repo root in Git Bash:
-#   bash deploy/deploy.sh
+#   MDB_HOST=ubuntu@<server> MDB_SSH_KEY=~/.ssh/<key> bash deploy/deploy.sh
 set -euo pipefail
-HOST=${MDB_HOST:-ubuntu@129.225.173.48}
+HOST=${MDB_HOST:?set MDB_HOST=user@server}
 KEY=${MDB_SSH_KEY:-$HOME/.ssh/oracle-md.key}
 
 [ -f web/vendor/pdf.min.mjs ] || { echo "web/vendor missing: run 'npm install && npm run vendor' in web/"; exit 1; }
