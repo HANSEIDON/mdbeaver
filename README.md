@@ -16,6 +16,7 @@ PDF, Word and PowerPoint in. AI-ready Markdown out, with fewer tokens.
 ![JavaScript](https://img.shields.io/badge/JavaScript-no%20framework-f7df1e?style=flat-square&logo=javascript&logoColor=black)
 ![GPU](https://img.shields.io/badge/GPU-MinerU%204-76b900?style=flat-square&logo=nvidia&logoColor=white)
 ![Price](https://img.shields.io/badge/price-free-8dd39a?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/license-MIT-15273a?style=flat-square)](LICENSE)
 
 <img src="docs/screenshots/results.png" alt="mdbeaver: three files converted and merged into one Markdown file" width="900">
 
@@ -174,6 +175,10 @@ One use is one file sent to the GPU, given back if that job fails or is withdraw
 ## Credits
 
 GPU conversion by [**MinerU**](https://github.com/opendatalab/MinerU) (Apache 2.0, attribution shown on the site's About page). In-browser conversion with [pdf.js](https://mozilla.github.io/pdf.js/) (Apache 2.0) and [JSZip](https://stuk.github.io/jszip/) (MIT). Set in [Geist](https://vercel.com/font) (OFL 1.1).
+
+## License
+
+mdbeaver's own code is [MIT](LICENSE). The libraries and models it uses keep their own licences (see Credits); the beaver artwork is part of the site and not covered by the MIT grant.
 
 ## Support
 
