@@ -27,6 +27,7 @@ class Job:
     max_pages: int = 50  # GPU page limit for this job; higher with a coupon
     coupon: str = ""  # coupon code that paid for this job: given back if the job does not finish
     progress: float | None = None  # 0..1, reported by the worker for long jobs
+    parts: list[str] = field(default_factory=list)  # Markdown of chunks already done, in order
     created: float = field(default_factory=time.time)
     status: str = QUEUED
     started: float | None = None
@@ -59,9 +60,12 @@ class JobStore:
         return next(i for i, j in enumerate(self.queued()) if j.id == job.id) + 1
 
     def worker_online(self) -> bool:
-        # A worker busy with a long job does not call claim, so a running job also counts as alive.
-        recent = time.time() - self.worker_last_seen < self.s.worker_online_window_sec
-        return recent or any(j.status == RUNNING for j in self.jobs.values())
+        # A busy worker sends a heartbeat instead of claiming, so a silent worker really is gone
+        # (e.g. the home PC was switched off mid-job).
+        return time.time() - self.worker_last_seen < self.s.worker_online_window_sec
+
+    def heartbeat(self) -> None:
+        self.worker_last_seen = time.time()
 
     def allow_ip(self, ip: str) -> bool:
         now = time.time()
@@ -129,6 +133,8 @@ class JobStore:
         for job in list(self.jobs.values()):
             if job.status == RUNNING and now - (job.started or now) > self.timeout(job):
                 self.finish(job, error="timeout")
+            elif job.status == RUNNING and not self.worker_online():
+                self.finish(job, error="worker_offline")  # the browser keeps its own draft
             elif job.status in (DONE, FAILED) and now - (job.finished or now) > self.s.result_ttl_sec:
                 self.remove(job.id)
             elif job.status == QUEUED and now - job.created > self.s.job_timeout_sec * 4:

@@ -115,7 +115,7 @@ def _subset(src: pdfium.PdfDocument, pages: list[int]) -> bytes:
 def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None,
             max_pages: int | None = None, on_progress=None) -> str:
     """Long documents go through MinerU CHUNK pages at a time: each chunk is its own small PDF
-    (retried once if it fails), and on_progress(done, total) is called after each one."""
+    (retried once if it fails), and on_progress(done, total, markdown) gets each finished one."""
     if kind != "pdf":
         raise ValueError("unsupported_kind")
     src = pdfium.PdfDocument(str(path))
@@ -137,9 +137,10 @@ def convert(path: Path, kind: str, mode: str, pages: list[int] | None = None,
                         if attempt == 2 or str(exc) == "engine_offline":
                             raise
                 # Chunk page i is original page chunk[i]: markers keep the document's numbering.
-                parts += [f"<!-- page {chunk[p['page_idx']]} -->\n\n{_page_markdown(p)}" for p in result]
+                done = [f"<!-- page {chunk[p['page_idx']]} -->\n\n{_page_markdown(p)}" for p in result]
+                parts += done
                 if on_progress:
-                    on_progress(start + len(chunk), len(wanted))
+                    on_progress(start + len(chunk), len(wanted), "\n\n".join(done))
     finally:
         src.close()
     return "\n\n".join(parts) + "\n"

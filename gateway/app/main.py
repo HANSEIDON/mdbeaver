@@ -94,7 +94,7 @@ def check_coupon(request: Request):
 
 @app.post("/api/jobs", status_code=202)
 async def create_job(request: Request, file: UploadFile = File(...), mode: str = Form("fast"),
-                     pages: str = Form("")):
+                     pages: str = Form(""), coupon_code: str = Form("", alias="coupon")):
     if mode not in ALLOWED_MODES:
         raise HTTPException(400, "invalid_mode")
     if pages and not PAGES.match(pages):
@@ -113,7 +113,8 @@ async def create_job(request: Request, file: UploadFile = File(...), mode: str =
         raise HTTPException(415, "unsupported_type")
 
     # A valid coupon raises this file's limits and is used once; an invalid one is ignored.
-    code = request.headers.get("x-coupon", "")
+    # It comes as a form field (some browser extensions drop uploads that carry extra headers).
+    code = coupon_code or request.headers.get("x-coupon", "")
     coupon = coupons.take(code) if code else None
     max_bytes = coupon["max_upload_mb"] * 1_048_576 if coupon else settings.max_upload_bytes
     job_id = new_job_id()
@@ -142,13 +143,16 @@ async def create_job(request: Request, file: UploadFile = File(...), mode: str =
 
 
 @app.get("/api/jobs/{job_id}")
-def get_job(job_id: str):
+def get_job(job_id: str, since: int = 0):
+    """since: how many finished chunks the page already has; only newer ones are sent."""
     job = store.jobs.get(job_id)
     if not job:
         raise HTTPException(404, "not_found")
     body = {"status": job.status, "position": store.position(job)}
     if job.status == RUNNING and job.progress is not None:
         body["progress"] = job.progress
+    if job.status == RUNNING and len(job.parts) > since >= 0:
+        body["parts"] = job.parts[since:]
     if job.status == DONE:
         body["markdown"] = job.result
     elif job.status == FAILED:
@@ -181,6 +185,7 @@ class FailIn(BaseModel):
 class ProgressIn(BaseModel):
     done: int = Field(ge=0)
     total: int = Field(gt=0)
+    markdown: str | None = Field(default=None, max_length=MAX_MARKDOWN_BYTES)  # the chunk just done
 
 
 def running_job(job_id: str) -> Job:
@@ -213,7 +218,17 @@ def worker_result(job_id: str, body: ResultIn):
 
 @app.post("/api/worker/jobs/{job_id}/progress", dependencies=[Depends(require_worker)])
 def worker_progress(job_id: str, body: ProgressIn):
-    running_job(job_id).progress = min(1.0, body.done / body.total)
+    job = running_job(job_id)
+    store.heartbeat()
+    job.progress = min(1.0, body.done / body.total)
+    if body.markdown:
+        job.parts.append(body.markdown)
+    return {"ok": True}
+
+
+@app.post("/api/worker/heartbeat", dependencies=[Depends(require_worker)])
+def worker_heartbeat():
+    store.heartbeat()
     return {"ok": True}
 
 

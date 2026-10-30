@@ -255,15 +255,25 @@ const sleep = (ms, signal) => new Promise((resolve, reject) => {
   signal?.addEventListener("abort", () => { clearTimeout(t); reject(stopped()); }, { once: true });
 });
 
-async function convertServer(item, label, mode, pages, pageCount, signal) {
+// onPart(markdown): the GPU's Markdown so far, each time another chunk of a long job is done.
+async function convertServer(item, label, mode, pages, pageCount, signal, onPart) {
   progress(`Sending ${label} to the GPU`, item, BROWSER_SHARE, "sending");
   const form = new FormData();
   form.append("file", item.file);
   form.append("mode", mode);
   if (pages) form.append("pages", pages.join(","));
   const coupon = state.coupon?.code;
-  const headers = coupon ? { "X-Coupon": coupon } : {};
-  const r = await fetch("/api/jobs", { method: "POST", body: form, headers, signal });
+  if (coupon) form.append("coupon", coupon); // a form field: some extensions drop uploads with extra headers
+  let r;
+  try {
+    r = await fetch("/api/jobs", { method: "POST", body: form, signal });
+  } catch (e) {
+    if (e.name === "AbortError") throw e;
+    // The request never left the browser: usually an extension (ad blocker) or a dropped connection.
+    const err = new Error("blocked");
+    err.fallback = true;
+    throw err;
+  }
   if (!r.ok) {
     const err = new Error((await r.json().catch(() => ({}))).detail || `http_${r.status}`);
     err.fallback = [429, 502, 503, 504].includes(r.status);
@@ -273,9 +283,14 @@ async function convertServer(item, label, mode, pages, pageCount, signal) {
   // On Stop, withdraw the job so the GPU does not work on it (and the file is deleted at once).
   signal?.addEventListener("abort", () => fetch(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => {}), { once: true });
   let started = null;
+  const parts = [];
   for (;;) {
     await sleep(1000, signal);
-    const s = await (await fetch(`/api/jobs/${id}`, { cache: "no-store", signal })).json();
+    const s = await (await fetch(`/api/jobs/${id}?since=${parts.length}`, { cache: "no-store", signal })).json();
+    if (s.parts?.length) {
+      parts.push(...s.parts);
+      onPart(parts.join("\n\n"));
+    }
     if (s.status === "queued") progress(`${label} · in line for the GPU, #${s.position}`, item, BROWSER_SHARE, `in line #${s.position}`);
     else if (s.status === "running") {
       started ??= Date.now();
@@ -315,8 +330,10 @@ function replacePages(local, gpu) {
 }
 
 // Returns { markdown, gpu, empty, layout } where gpu is "unneeded", "done", or why the pages the
-// browser couldn't read stayed that way: "offline" (no worker / Device only), "too_big" (over the
-// upload limit), "too_many" (over state.maxPages) or "failed". empty/layout list those pages.
+// browser couldn't read stayed that way: "offline" (no worker / Device only / PC went off mid-job),
+// "too_big" (over the upload limit), "too_many" (over state.maxPages), "blocked" (the upload never
+// left the browser) or "failed". empty/layout list those pages; Best quality on a readable PDF
+// reports the reason too, with both lists empty.
 async function convert(item, label, onDraft, signal) {
   const local = await convertLocal(item, label, signal);
   if (item.kind !== "pdf") return { markdown: local, gpu: "unneeded" };
@@ -330,17 +347,25 @@ async function convert(item, label, onDraft, signal) {
   // Best quality redoes every page, unless that is over the GPU limit: then only the scans.
   const best = mode() === "best" && all.length <= state.maxPages;
   const target = best ? all : scanned;
-  const missed = (why) => ({ markdown: local, gpu: scanned.length ? why : "unneeded", empty, layout });
+  const missed = (why) => ({ markdown: local, gpu: scanned.length || mode() === "best" ? why : "unneeded", empty, layout });
   if (!target.length) return { markdown: local, gpu: "unneeded" };
   if (!canUseGpu(item)) return missed(state.workerOnline && mode() !== "device" ? "too_big" : "offline");
   if (target.length > state.maxPages) return missed("too_many");
   onDraft(local);
+  // Each finished chunk replaces its pages in the draft, so a long job fills in as it goes.
+  let partial = "";
+  const onPart = (gpu) => { partial = gpu; onDraft(replacePages(local, gpu)); };
   try {
-    const gpu = await convertServer(item, label, best ? "precise" : "fast", best ? null : target, target.length, signal);
+    const gpu = await convertServer(item, label, best ? "precise" : "fast", best ? null : target, target.length, signal, onPart);
     return { markdown: replacePages(local, gpu), gpu: "done" };
   } catch (e) {
     if (!e.fallback) throw e;
-    return missed("failed");
+    const why = { blocked: "blocked", worker_offline: "offline" }[e.message] || "failed";
+    if (!partial) return missed(why);
+    // Chunks that finished before the GPU went away are kept; only the rest is reported.
+    const got = splitPages(partial);
+    return { markdown: replacePages(local, partial), gpu: why,
+      empty: empty.filter((n) => !got.has(n)), layout: layout.filter((n) => !got.has(n)) };
   }
 }
 
@@ -388,6 +413,7 @@ const WHY = {
   too_big: () => `The file is over ${state.maxMb} MB, the most the GPU accepts${state.coupon ? "" : " (a coupon raises this)"}.`,
   too_many: () => `That's more than the ${state.maxPages} pages the GPU takes per file${state.coupon ? "" : " (a coupon raises this)"}.`,
   failed: () => "The GPU couldn't finish them; try again.",
+  blocked: () => "The upload didn't go through. A browser extension such as an ad blocker can stop it: try a private window, or allow mdbeaver.com in the extension.",
 };
 
 function renderNotice(warnings) {
@@ -396,8 +422,9 @@ function renderNotice(warnings) {
     const parts = [];
     if (w.empty.length) parts.push(`${count(w.empty.length, "scanned page")} came out empty (p. ${pageList(w.empty)})`);
     if (w.layout.length) parts.push(`${count(w.layout.length, "multi-column page")} may be out of order (p. ${pageList(w.layout)})`);
+    const what = parts.length ? `${parts.join("; ")}.` : "Best quality wasn't applied."; // readable PDF, GPU unreachable
     const li = document.createElement("li");
-    li.append(Object.assign(document.createElement("strong"), { textContent: w.name }), ` · ${parts.join("; ")}. ${WHY[w.gpu]()}`);
+    li.append(Object.assign(document.createElement("strong"), { textContent: w.name }), ` · ${what} ${WHY[w.gpu]()}`);
     return li;
   }));
 }

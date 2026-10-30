@@ -7,7 +7,9 @@ Config comes from environment variables or worker/.env (see .env.example).
 import logging
 import os
 import tempfile
+import threading
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 import httpx
@@ -55,7 +57,35 @@ def run() -> None:
             backoff = min(backoff * 2, 60)
 
 
+@contextmanager
+def heartbeat(client: httpx.Client, every: float = 15):
+    """While a job runs, tell the gateway every few seconds that this worker is still alive, so a
+    switched-off PC is noticed within a minute instead of at the job's timeout. Uses its own
+    connection: the main one may be busy uploading."""
+    stop = threading.Event()
+
+    def beat() -> None:
+        with httpx.Client(base_url=client.base_url, headers=client.headers, timeout=10) as hb:
+            while not stop.wait(every):
+                try:
+                    hb.post("/api/worker/heartbeat")
+                except httpx.HTTPError:
+                    pass
+
+    thread = threading.Thread(target=beat, daemon=True)
+    thread.start()
+    try:
+        yield
+    finally:
+        stop.set()
+
+
 def process(client: httpx.Client, engine, job: dict) -> None:
+    with heartbeat(client):
+        _process(client, engine, job)
+
+
+def _process(client: httpx.Client, engine, job: dict) -> None:
     job_id = job["id"]
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix="mdb-") as tmp:
@@ -72,10 +102,11 @@ def process(client: httpx.Client, engine, job: dict) -> None:
         pages = [int(p) for p in job.get("pages", "").split(",") if p] or None
         try:
             # The gateway sets the page limit per job (higher with a coupon). Long jobs report
-            # progress after each chunk so the page can show how far along they are.
-            def progress(done: int, total: int) -> None:
+            # each finished chunk, so the page shows progress and the Markdown done so far.
+            def progress(done: int, total: int, markdown: str | None = None) -> None:
                 try:
-                    client.post(f"/api/worker/jobs/{job_id}/progress", json={"done": done, "total": total})
+                    client.post(f"/api/worker/jobs/{job_id}/progress",
+                                json={"done": done, "total": total, "markdown": markdown})
                 except httpx.HTTPError:
                     pass  # progress is a nicety; never fail the job over it
 
